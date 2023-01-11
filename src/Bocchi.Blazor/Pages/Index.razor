@@ -1,0 +1,25 @@
+﻿@page "/"
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+<div class="index_main">
+    有朋自远方来，不亦乐乎<br/>
+    欢迎来到Bocchi机器人<br/>
+    您可以选择：<br/>
+    私聊机器人：<Command Text="登录"/>进行登录<br/>
+    还没有添加机器人为好友？<br/>
+    那就先：<a href="tencent://message/?uin=@_botId">添加机器人[@_botId]为好友</a>吧！
+
+</div>
+
+<RandomBackGround/>
+
+@code
+{
+    string _botId = "";
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _botId = Configuration.GetValue("SoraBot:BotTencentId", string.Empty);
+    }
+}

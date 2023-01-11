@@ -1,0 +1,44 @@
+﻿@using System.Text.RegularExpressions
+@inherits Volo.Abp.AspNetCore.Components.AbpComponentBase
+
+@inject NavigationManager NavigationManager
+
+@if (CurrentUser.IsAuthenticated)
+{
+    // 已经登录的
+    <Logout ImageUrl="/imgs/account_user.png" DisplayName="@CurrentUser.Name" UserName="@CurrentUser.Name">
+        <LinkTemplate>
+            <a href="/Account/Manage">
+                <i class="fa-solid fa-user"></i><span>个人中心</span>
+            </a>
+            <LogoutLink/>
+        </LinkTemplate>
+    </Logout>
+}
+else
+{
+    // 未登录的
+    <div>
+        <a style="color: white" href="/Account/Login?@GetQuery()">
+            <i class="fas fa-sign-in"></i><span>登录</span>
+        </a>
+    </div>
+}
+
+
+@code {
+
+
+    private object GetQuery()
+    {
+        if (Regex.IsMatch(NavigationManager.Uri, "login"))
+        {
+            return "ReturnUrl=/";
+        }
+        else
+        {
+            return $"ReturnUrl={new Uri(NavigationManager.Uri).PathAndQuery}".Replace("&","%26");
+        }
+    }
+
+}

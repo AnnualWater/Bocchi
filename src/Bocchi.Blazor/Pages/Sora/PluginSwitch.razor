@@ -1,0 +1,128 @@
+﻿@page "/sora/plugin_switch/{TypeStr}"
+@using Bocchi.PluginSwitch
+@using Bocchi.SoraBotCore
+@inject IPluginSwitchWebService Service
+<PageTitle>Bocchi插件管理</PageTitle>
+
+
+<Card>
+    <HeaderTemplate>
+        @(_type switch
+        {
+            PluginSwitchType.Private => "私聊插件",
+            PluginSwitchType.Group => $"群聊插件[GID:{GroupId}]",
+            null => "测试数据",
+            _ => throw new ArgumentOutOfRangeException()
+            })
+    </HeaderTemplate>
+    <BodyTemplate>
+        <Table ShowEmpty="true" TItem="PluginSwitchItemDto" Items="@_data" IsBordered="true" IsStriped="true">
+            <TableColumns>
+                <TableColumn Align="Alignment.Center" Text="插件名" @bind-Field="@context.PluginFullName"/>
+                <TableColumn Align="Alignment.Center" Text="状态" @bind-Field="@context.PluginBanLevel"/>
+                <TableColumn Width="100" Text="操作" @bind-Field="@context.PluginFullName">
+                    <Template Context="value">
+                        <div>
+                            <Button Color="Color.Primary" Text="启用" OnClick="async () => { await AllowButton(value.Value); }"></Button>
+                            <Divider IsVertical="true"></Divider>
+                            <Button Color="Color.Warning" Text="禁用" OnClick="async () => { await BanButton(value.Value); }"></Button>
+                        </div>
+                    </Template>
+                </TableColumn>
+
+            </TableColumns>
+        </Table>
+    </BodyTemplate>
+    <FooterTemplate>
+        如果此页面插件显示不全，请先私聊或在群内发消息初始化插件列表。
+    </FooterTemplate>
+</Card>
+
+
+@code
+{
+    #region 路由参数
+
+    [Parameter]
+    public string TypeStr { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "gid")]
+    public long GroupId { get; set; }
+
+    #endregion
+
+    PluginSwitchType? _type;
+
+    #region 数据
+
+    List<PluginSwitchItemDto> _data = new();
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        _type = TypeStr.ToLower() switch
+        {
+            "group" => PluginSwitchType.Group,
+            "private" => PluginSwitchType.Private,
+            _ => _type
+            };
+        await ResetData();
+
+        await base.OnInitializedAsync();
+    }
+
+    async Task ResetData()
+    {
+        _data = _type switch
+        {
+            PluginSwitchType.Private => await Service.GetPrivatePluginSwitch(),
+            PluginSwitchType.Group => await Service.GetGroupPluginSwitch(GroupId),
+            null => new List<PluginSwitchItemDto>
+            {
+                new() { PluginFullName = "测试插件1", PluginBanLevel = PluginBanLevel.Allow },
+                new() { PluginFullName = "测试插件2", PluginBanLevel = PluginBanLevel.AdminBan },
+                new() { PluginFullName = "测试插件3", PluginBanLevel = PluginBanLevel.OwnerBan },
+                new() { PluginFullName = "测试插件4", PluginBanLevel = PluginBanLevel.SuperBan }
+            },
+            _ => throw new ArgumentOutOfRangeException()
+            };
+    }
+
+    async Task BanButton(string pluginName)
+    {
+        switch (_type)
+        {
+            case PluginSwitchType.Private:
+                await Service.BanPrivatePlugin(pluginName);
+                break;
+            case PluginSwitchType.Group:
+                await Service.BanGroupPluginSwitch(GroupId, pluginName);
+                break;
+            case null:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+        await ResetData();
+    }
+
+    async Task AllowButton(string pluginName)
+    {
+        switch (_type)
+        {
+            case PluginSwitchType.Private:
+                await Service.AllowPrivatePlugin(pluginName);
+                break;
+            case PluginSwitchType.Group:
+                await Service.AllowGroupPluginSwitch(GroupId, pluginName);
+                break;
+            case null:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+        await ResetData();
+    }
+}

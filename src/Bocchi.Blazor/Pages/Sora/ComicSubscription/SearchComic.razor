@@ -1,0 +1,129 @@
+﻿@page "/sora/comic_subscription/search"
+@using Bocchi.SoraBotPlugin.ComicSubscription
+@inject MessageService MessageService
+@inject SearchService SearchService
+@inject IComicSubscriptionWebService ComicSubscriptionWebService
+
+<Card>
+    <HeaderTemplate>
+        番剧搜索 : @SearchKey
+    </HeaderTemplate>
+    <BodyTemplate>
+        <div>
+            <BootstrapInput TValue="string" @bind-Value="_search" PlaceHolder="请输入搜索关键词"/>
+            <Button Text="搜索" OnClick="OnSearchClick"></Button>
+            注：此页面暂时只能进行个人订阅
+        </div>
+        <div id="@_shoot">
+            <Table ShowLoading="@_tableLoading" ShowEmpty="true" TItem="SearchComicItem" Items="@_data" IsBordered="true" IsStriped="true">
+                <TableColumns>
+                    <TableColumn Align="Alignment.Center" Text="ID" @bind-Field="@context.ComicId"/>
+                    <TableColumn Align="Alignment.Center" Text="番剧名" @bind-Field="@context.Title"/>
+                    @if (Shoot != "true")
+                    {
+                        <TableColumn Width="77" Align="Alignment.Center" Text="封面" @bind-Field="@context.ComicId">
+                            <Template Context="value">
+                                <img style="width: 75px;height: 100px" src="@GetImgUrl(value.Value)" alt="@GetTitle(value.Value)"/>
+                            </Template>
+                        </TableColumn>
+                    }
+                    <TableColumn Align="Alignment.Center" Text="更新信息" @bind-Field="@context.UpdateInfo"/>
+                    @if (Shoot != "true")
+                    {
+                        <TableColumn Width="100" Text="操作" @bind-Field="@context.ComicId">
+                            <Template Context="value">
+
+                                <Button Color="Color.Primary" Text="订阅" OnClick="async () => { await OnComicSubscription(value.Value); }"></Button>
+
+
+                            </Template>
+                        </TableColumn>
+                    }
+                </TableColumns>
+            </Table>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        如果此页面为测试数据，请检查您的权限
+    </FooterTemplate>
+</Card>
+
+@code {
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "search")]
+    public string SearchKey { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "shoot")]
+    public string Shoot { get; set; }
+
+    List<SearchComicItem> _data = new();
+
+
+    string _search = "";
+    private bool _tableLoading = false;
+    private string _shoot = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReGetData();
+        await base.OnInitializedAsync();
+        _shoot = "screenshot";
+    }
+
+    private async Task ReGetData()
+    {
+        _tableLoading = true;
+        StateHasChanged();
+        _data = await SearchService.SearchComic(SearchKey);
+        _tableLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task OnSearchClick()
+    {
+        if (_search != null)
+        {
+            SearchKey = _search;
+            await ReGetData();
+            return;
+        }
+        await MessageService.Show(new MessageOption()
+        {
+            Content = "搜索关键字不能为空",
+            Color = Color.Warning
+        });
+    }
+
+    private async Task OnComicSubscription(string comicId)
+    {
+        var(success,msg) = await ComicSubscriptionWebService.SubscribeComicPrivate(comicId);
+        await MessageService.Show(new MessageOption()
+        {
+            Content = msg,
+            Color = success ? Color.Success : Color.Warning
+        });
+    }
+
+    private string GetImgUrl(string value)
+    {
+        var item = _data.FirstOrDefault(x => x.ComicId == value);
+        if (item == null)
+        {
+            return "";
+        }
+        return item.ImgUrl;
+    }
+
+    private string GetTitle(string value)
+    {
+        var item = _data.FirstOrDefault(x => x.ComicId == value);
+        if (item == null)
+        {
+            return "";
+        }
+        return item.Title;
+    }
+
+}

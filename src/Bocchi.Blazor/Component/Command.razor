@@ -1,0 +1,62 @@
+﻿@using JetBrains.Annotations
+@inject IJSRuntime JsRuntime
+@inject MessageService MessageService
+<span class="command_brackets">[<span @onclick="CopyToClipboard" class="command">@Text</span>]</span>
+
+<style>
+    .command{
+        color: deeppink;
+    }
+    .command_brackets{
+        color: blue;
+    }
+</style>
+
+@code {
+    [CanBeNull] private IJSObjectReference _jsObjectReference;
+
+    [Parameter]
+    public string Text { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+    // 加载js文件
+            _jsObjectReference = await JsRuntime.InvokeAsync<IJSObjectReference>("import",
+                "./scripts/copy2Clipboard.js");
+        }
+    }
+
+    async Task CopyToClipboard()
+    {
+        if (_jsObjectReference == null)
+        {
+            await MessageService.Show(new MessageOption
+            {
+                Content = $"复制命令[{Text}]失败",
+                Color = Color.Warning
+            });
+            return;
+        }
+        try
+        {
+            await _jsObjectReference.InvokeVoidAsync("copy2Clipboard", Text);
+        }
+        catch (Exception)
+        {
+            await MessageService.Show(new MessageOption
+            {
+                Content = $"复制命令[{Text}]失败",
+                Color = Color.Warning
+            });
+            return;
+        }
+        await MessageService.Show(new MessageOption
+        {
+            Content = $"复制命令[{Text}]成功",
+            Color = Color.Success
+        });
+    }
+
+}

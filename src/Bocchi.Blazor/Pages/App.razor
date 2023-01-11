@@ -1,0 +1,32 @@
+﻿@using Microsoft.Extensions.Options
+@using Volo.Abp.AspNetCore.Components.Web.BasicTheme.Themes.Basic
+@using Volo.Abp.AspNetCore.Components.Web.Theming.Routing
+@inject IOptions<AbpRouterOptions> RouterOptions
+<CascadingAuthenticationState>
+    <BootstrapBlazorRoot>
+        <Router AppAssembly="RouterOptions.Value.AppAssembly"
+                AdditionalAssemblies="RouterOptions.Value.AdditionalAssemblies">
+            <Found Context="routeData">
+                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                    <NotAuthorized>
+                        @if (!context.User.Identity.IsAuthenticated)
+                        {
+                            <RedirectToLogin/>
+                        }
+                        else
+                        {
+                            <h4>403 Forbidden</h4>
+                            <h3>这个页面被上锁了哦，你得带着钥匙来</h3>
+                        }
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+            </Found>
+            <NotFound>
+                <LayoutView Layout="@typeof(MainLayout)">
+                    <h4>404 NotFound</h4>
+                    <h3>这个页面很孤独，啥也没有</h3>
+                </LayoutView>
+            </NotFound>
+        </Router>
+    </BootstrapBlazorRoot>
+</CascadingAuthenticationState>

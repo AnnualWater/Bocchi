@@ -1,0 +1,54 @@
+﻿@page "/sora/order_music"
+@using Bocchi.SoraBotPlugin.OrderMusic
+@inject SearchCacheService CacheService
+
+<Card>
+    <HeaderTemplate>
+        ID : @IdStr
+    </HeaderTemplate>
+    <BodyTemplate>
+        <div id="@_shoot" style="width: 600px">
+            <Table ShowEmpty="true" TItem="MusicDataItem" Items="_musicDataItems" IsBordered="true" IsStriped="true">
+                <TableColumns>
+                    <TableColumn Align="Alignment.Center" Width="24" Text="序号" @bind-Field="@context.GetNum"/>
+                    <TableColumn Align="Alignment.Center" Text="歌曲名" @bind-Field="@context.SongName"/>
+                    <TableColumn Align="Alignment.Center" Text="歌手名" @bind-Field="@context.Singer"/>
+                    <TableColumn Align="Alignment.Center" Width="68" Text="平台" @bind-Field="@context.Platform"/>
+                </TableColumns>
+            </Table>
+        </div>
+    </BodyTemplate>
+</Card>
+
+@code
+{
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "id")]
+    public string IdStr { get; set; }
+
+    List<MusicDataItem> _musicDataItems = new();
+
+    protected override void OnInitialized()
+    {
+        if (Guid.TryParse(IdStr, out var id))
+        {
+            _musicDataItems = CacheService.GetItem(id);
+        }
+        else
+        {
+            IdStr = "没有令牌就不要乱跑了！";
+            _musicDataItems = new List<MusicDataItem>
+            {
+                new() { Num = 1, MusicId = 11451401, SongName = "你瞅啥", Singer = "尼古拉斯赵四", Platform = "网易云音乐" },
+                new() { Num = 2, MusicId = 11451402, SongName = "瞅你咋地", Singer = "谢广坤", Platform = "网易云音乐" },
+                new() { Num = 3, MusicId = 11451403, SongName = "你再瞅一个试试", Singer = "尼古拉斯赵四", Platform = "网易云音乐" },
+                new() { Num = 4, MusicId = 11451404, SongName = "我就瞅我就愁", Singer = "谢广坤", Platform = "QQ音乐" },
+                new() { Num = 5, MusicId = 11451405, SongName = "看我不削你", Singer = "尼古拉斯赵四", Platform = "QQ音乐" }
+            };
+        }
+        base.OnInitialized();
+        _shoot = "screenshot";
+    }
+
+    private string _shoot = "";
+}

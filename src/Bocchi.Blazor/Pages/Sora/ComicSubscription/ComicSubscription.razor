@@ -1,0 +1,118 @@
+﻿@page "/sora/comic_subscription/list"
+@using Bocchi.ComicSubscription
+@using Bocchi.SoraBotPlugin.ComicSubscription
+@inject IComicSubscriptionWebService Service
+@inject NavigationManager NavigationManager
+<Card>
+    <HeaderTemplate>
+        @(_type switch
+        {
+            ScheduledType.Private => "私聊订阅",
+            ScheduledType.Group => $"群聊订阅[GID:{GroupId}]",
+            null => "测试数据",
+            _ => throw new ArgumentOutOfRangeException()
+            })
+        @if (_type == ScheduledType.Private)
+        {
+            <Button Text="搜索番剧" OnClick="GotoSearch"></Button>
+        }
+    </HeaderTemplate>
+    <BodyTemplate>
+        <Table ShowEmpty="true" TItem="ComicSubscriptionDto" Items="@_data" IsBordered="true" IsStriped="true">
+            <TableColumns>
+                <TableColumn Align="Alignment.Center" Text="ID" @bind-Field="@context.ComicId"/>
+                <TableColumn Align="Alignment.Center" Text="番剧名" @bind-Field="@context.Title"/>
+                <TableColumn Align="Alignment.Center" Text="当前集数" @bind-Field="@context.Episode"/>
+                <TableColumn Align="Alignment.Center" Text="更新信息" @bind-Field="@context.UpdateInfo"/>
+                <TableColumn Align="Alignment.Center" Text="完结" @bind-Field="@context.IsEnd"/>
+                <TableColumn Width="100" Text="操作" @bind-Field="@context.ComicId">
+                    <Template Context="value">
+                        <PopConfirmButton Placement="Placement.Top" Color="Color.Danger" ConfirmIcon="fa-solid fa-triangle-exclamation text-danger"
+                                          ConfirmButtonColor="Color.Danger" Text="删除订阅" Content="确定删除数据吗？"
+                                          OnConfirm="async () => { await DelSubscription(value.Value); }"/>
+
+                        @* <Button Color="Color.Warning" Text="删除订阅" OnClick="async () => { await DelSubscription(value.Value); }"></Button> *@
+
+                    </Template>
+                </TableColumn>
+
+
+            </TableColumns>
+        </Table>
+    </BodyTemplate>
+    <FooterTemplate>
+        如果此页面为测试数据，请检查您的权限
+    </FooterTemplate>
+</Card>
+
+@code
+{
+    #region 路由参数
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "type")]
+    public string TypeStr { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "gid")]
+    public long GroupId { get; set; }
+
+    ScheduledType? _type;
+
+    #endregion
+
+    List<ComicSubscriptionDto> _data = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _type = TypeStr?.ToLower() switch
+        {
+            "group" => ScheduledType.Group,
+            "private" => ScheduledType.Private,
+            _ => _type
+            };
+        await ResetData();
+
+        await base.OnInitializedAsync();
+    }
+
+    async Task ResetData()
+    {
+        _data = _type switch
+        {
+            ScheduledType.Private => await Service.GetComicSubscriptionList(ScheduledType.Private),
+            ScheduledType.Group => await Service.GetComicSubscriptionList(ScheduledType.Group, GroupId),
+            null => new List<ComicSubscriptionDto>
+            {
+                new() { ComicId = "114514", Title = "杰哥不要啊", Episode = "第1集", UpdateInfo = "每周8晚11点更新", IsEnd = false },
+                new() { ComicId = "11451401", Title = "啊~~~~~~~~", Episode = "第2集", UpdateInfo = "每周8晚24点更新", IsEnd = false },
+                new() { ComicId = "1008601", Title = "阿巴阿巴", Episode = "第12集", UpdateInfo = "每周8晚24点更新", IsEnd = true }
+            },
+            _ => throw new ArgumentOutOfRangeException()
+            };
+        StateHasChanged();
+    }
+
+    private async Task DelSubscription(string comicId)
+    {
+        switch (_type)
+        {
+            case ScheduledType.Private:
+                await Service.DelComicSubscription(ScheduledType.Private, comicId);
+                break;
+            case ScheduledType.Group:
+                await Service.DelComicSubscription(ScheduledType.Group, comicId, GroupId);
+                break;
+            case null:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+        await ResetData();
+    }
+
+    private void GotoSearch()
+    {
+        NavigationManager.NavigateTo("/sora/comic_subscription/search");
+    }
+}
