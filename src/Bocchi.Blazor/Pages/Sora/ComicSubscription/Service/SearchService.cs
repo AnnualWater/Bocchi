@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Bocchi.HtmlAgilityPack;
@@ -11,7 +12,7 @@ namespace Bocchi.Blazor.Pages.Sora.ComicSubscription;
 
 public class SearchService : ITransientDependency
 {
-    readonly RestClient _client = new("https://www.yhdmp.net/");
+    private readonly RestClient _client = new(SoraBotPlugin.ComicSubscription.SearchService.Url);
     private readonly SoraBotPlugin.ComicSubscription.SearchService _searchService;
 
     public SearchService(SoraBotPlugin.ComicSubscription.SearchService searchService)
@@ -38,21 +39,16 @@ public class SearchService : ITransientDependency
             return new List<SearchComicItem>();
         }
 
-        var resp = new List<SearchComicItem>();
-        foreach (var searchNode in searchNodes)
-        {
-            var url = searchNode.SelectSingleNode("./h2/a").GetAttributeValue("href", string.Empty);
-            var id = Regex.Match(url, "[0-9]+").Value;
-            resp.Add(new SearchComicItem
+        return (from searchNode in searchNodes
+            let url = searchNode.SelectSingleNode("./h2/a").GetAttributeValue("href", string.Empty)
+            let id = Regex.Match(url, "[0-9]+").Value
+            select new SearchComicItem
             {
                 ComicId = id,
                 Title = searchNode.SelectSingleNode("./h2/a/@title").GetAttributeValue("title", string.Empty),
                 ImgUrl = searchNode.SelectSingleNode("./a/img").GetAttributeValue("src", string.Empty),
                 UpdateInfo = searchNode.SelectSingleNode("./span[1]/font/text()").TryGetText()
-            });
-        }
-
-        return resp;
+            }).ToList();
     }
 
     public async Task<SearchComicInfo> SearchComicById(string comicId)

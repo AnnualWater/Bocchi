@@ -1,13 +1,12 @@
-﻿# Bocchi
-## 测试版V0.0.1
+﻿# Bocchi - - - - 测试版V0.0.1
 ### MSSQLServer
 需要MSSQLServer数据库
-
+    
 ### 数据迁移
 1. 需要在 src/Bocchi.EntityFrameworkCore 执行 \
 注意此命令需要安装dotnet-ef
 > dotnet ef migrations add [MigrateName]
-2. 修改 src/Bocchi.DbMigrator和 src/Bocchi.Blazor 修改appsetting.json中的数据库连接字符串 \
+2. 修改 src/Bocchi.DbMigrator和 src/Bocchi.Blazor 修改appsetting.json中的数据库连接字符串
 3. 然后运行 src/Bocchi.DbMigrator项目执行数据库迁移
 
 ### 运行项目

@@ -1,15 +1,10 @@
-﻿@using Volo.Abp.Ui.LayoutHooks
-@using Volo.Abp.AspNetCore.Components.Web.Theming.Components.LayoutHooks
-@using Volo.Abp.AspNetCore.Components.Web.Theming.Components
-@using Volo.Abp.AspNetCore.Components.Web.Theming.Layout
-
-@using Volo.Abp.AspNetCore.Components.Web.BasicTheme.Themes.Basic
+﻿@using Volo.Abp.AspNetCore.Components.Web.BasicTheme.Themes.Basic
 @using Volo.Abp.BlazoriseUI.Components;
 
 @inherits LayoutComponentBase
-<nav class="navbar navbar-expand-md navbar-dark bg-dark shadow-sm flex-column flex-md-row mb-4" id="main-navbar" style="min-height: 4rem;">
+<nav class="navbar navbar-expand-md navbar-dark bg-dark shadow-sm flex-column flex-md-row mb-4" id="main-navbar" style="min-height: 4rem;width: 100%">
     <div class="container">
-        <Branding />
+        <Branding/>
         <button @onclick="ToggleCollapse" class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#main-navbar-collapse" aria-controls="main-navbar-collapse"
                 aria-expanded="false" aria-label="Toggle navigation">
@@ -17,19 +12,16 @@
         </button>
         <div class="collapse navbar-collapse @(IsCollapseShown ? "show" : "")" id="main-navbar-collapse">
             <ul class="navbar-nav mx-auto">
-                <NavMenu />
+                <NavMenu/>
             </ul>
-            <NavToolbar />
+            <NavToolbar/>
         </div>
     </div>
 </nav>
-<div class="container">
-    <PageAlert />
-    <LayoutHook Name="@LayoutHooks.Body.First" Layout="@StandardLayouts.Application" />
+<div style="padding: 0 8vw">
+    <PageAlert/>
     @Body
-    <LayoutHook Name="@LayoutHooks.Body.Last" Layout="@StandardLayouts.Application" />
-    <DynamicLayoutComponent />
-    <UiMessageAlert />
-    <UiNotificationAlert />
-    <UiPageProgress />
+    <UiMessageAlert/>
+    <UiNotificationAlert/>
+    <UiPageProgress/>
 </div>

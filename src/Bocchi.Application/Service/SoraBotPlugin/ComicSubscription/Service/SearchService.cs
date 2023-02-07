@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using Bocchi.HtmlAgilityPack;
 using HtmlAgilityPack;
 using RestSharp;
@@ -8,7 +10,8 @@ namespace Bocchi.SoraBotPlugin.ComicSubscription;
 
 public class SearchService : ITransientDependency
 {
-    private readonly RestClient _client = new RestClient("https://www.yhdmp.net/");
+    public const string Url = "https://www.yhpdm.com/";
+    private readonly RestClient _client = new(Url);
 
     public async Task<SearchComicInfo> SearchComicById(string comicId)
     {
@@ -21,7 +24,14 @@ public class SearchService : ITransientDependency
 
         var doc = new HtmlDocument();
         doc.LoadHtml(response.Content);
-        var url = doc.DocumentNode.SelectSingleNode("//div[@class='tabs']/div/div[2]/ul/li[last()]/a/@href")
+        // var url = doc.DocumentNode.SelectSingleNode("//div[@class='tabs']/div/div[@style='display:block']/ul/li[last()]/a/@href")
+        //     .GetAttributeValue("href", string.Empty);
+
+        var title = doc.DocumentNode
+            .SelectSingleNode("//div[@class='tabs']/div/div[@style='display:block']/ul/li[last()]/a")
+            .GetAttributeValue("title", string.Empty);
+        var url = doc.DocumentNode
+            .SelectSingleNode($"//div[@class='tabs']/div/div[@style='display:block']/ul/li/a[@title='{title}']/@href")
             .GetAttributeValue("href", string.Empty);
         return new SearchComicInfo
         {

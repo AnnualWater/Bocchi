@@ -7,8 +7,9 @@
         ID : @IdStr
     </HeaderTemplate>
     <BodyTemplate>
-        <div id="@_shoot" style="width: 600px">
-            <Table ShowEmpty="true" TItem="MusicDataItem" Items="_musicDataItems" IsBordered="true" IsStriped="true">
+        <div id="@_shoot">
+            <Table ShowEmpty="true" TItem="MusicDataItem" Items="_musicDataItems" IsBordered="true" IsStriped="true"
+                   OnAfterRenderCallback="FinishRender">
                 <TableColumns>
                     <TableColumn Align="Alignment.Center" Width="24" Text="序号" @bind-Field="@context.GetNum"/>
                     <TableColumn Align="Alignment.Center" Text="歌曲名" @bind-Field="@context.SongName"/>
@@ -47,8 +48,14 @@
             };
         }
         base.OnInitialized();
-        _shoot = "screenshot";
     }
 
     private string _shoot = "";
+
+    private async Task FinishRender(Table<MusicDataItem> arg)
+    {
+        _shoot = "screenshot";
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
 }

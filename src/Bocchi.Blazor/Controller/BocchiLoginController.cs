@@ -50,11 +50,10 @@ public class BocchiLoginController : BocchiController
         await _identitySecurityLogManager.SaveAsync(new IdentitySecurityLogContext()
         {
             Identity = IdentitySecurityLogIdentityConsts.Identity,
+            UserName = user.UserName,
             Action = IdentitySecurityLogActionConsts.LoginSucceeded
         });
 
         return Redirect(redirect);
     }
-
-
 }

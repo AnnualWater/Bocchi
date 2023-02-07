@@ -10,12 +10,13 @@
     </HeaderTemplate>
     <BodyTemplate>
         <div>
-            <BootstrapInput TValue="string" @bind-Value="_search" PlaceHolder="请输入搜索关键词"/>
+            <BootstrapInput TValue="string" @bind-Value="_search" PlaceHolder="请输入搜索关键词" OnEnterAsync="async _ => { await OnSearchClick(); }"/>
             <Button Text="搜索" OnClick="OnSearchClick"></Button>
             注：此页面暂时只能进行个人订阅
         </div>
         <div id="@_shoot">
-            <Table ShowLoading="@_tableLoading" ShowEmpty="true" TItem="SearchComicItem" Items="@_data" IsBordered="true" IsStriped="true">
+            <Table ShowLoading="@_tableLoading" ShowEmpty="true" TItem="SearchComicItem" Items="@_data" IsBordered="true" IsStriped="true"
+                   OnAfterRenderCallback="FinishRender">
                 <TableColumns>
                     <TableColumn Align="Alignment.Center" Text="ID" @bind-Field="@context.ComicId"/>
                     <TableColumn Align="Alignment.Center" Text="番剧名" @bind-Field="@context.Title"/>
@@ -69,7 +70,6 @@
     {
         await ReGetData();
         await base.OnInitializedAsync();
-        _shoot = "screenshot";
     }
 
     private async Task ReGetData()
@@ -124,6 +124,12 @@
             return "";
         }
         return item.Title;
+    }
+    private async Task FinishRender(Table<SearchComicItem> arg)
+    {
+        _shoot = "screenshot";
+        StateHasChanged();
+        await Task.CompletedTask;
     }
 
 }

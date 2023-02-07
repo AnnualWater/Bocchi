@@ -3,7 +3,7 @@ using Volo.Abp.Domain.Entities;
 
 namespace Bocchi.ComicSubscription;
 
-public class ComicSubscriptionEntity : Entity<Guid>
+public class ComicSubscriptionEntity : AggregateRoot<Guid>
 {
     /// <summary>
     /// 订阅人TencentId

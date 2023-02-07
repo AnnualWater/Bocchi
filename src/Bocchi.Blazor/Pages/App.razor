@@ -15,6 +15,7 @@
                         }
                         else
                         {
+                            <PageTitle>Forbidden</PageTitle>
                             <h4>403 Forbidden</h4>
                             <h3>这个页面被上锁了哦，你得带着钥匙来</h3>
                         }
@@ -22,6 +23,7 @@
                 </AuthorizeRouteView>
             </Found>
             <NotFound>
+                <PageTitle>Not Found</PageTitle>
                 <LayoutView Layout="@typeof(MainLayout)">
                     <h4>404 NotFound</h4>
                     <h3>这个页面很孤独，啥也没有</h3>

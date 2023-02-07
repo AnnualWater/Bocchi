@@ -67,15 +67,9 @@ public class ComicSubscriptionWebService : ApplicationService, IComicSubscriptio
         switch (type)
         {
             case ScheduledType.Private:
-                var userInfo = await _currentSoraUser.GetUserInfo();
-                if (userInfo == null)
-                {
-                    return;
-                }
-
                 var pEntity = await _repository.GetAsync(e =>
                     e.ComicId == comicId &&
-                    e.ScheduledType == ScheduledType.Private && e.CreateUserId == userInfo.Value.UserId);
+                    e.ScheduledType == ScheduledType.Private && e.CreateUserId == userTencentId);
                 if (pEntity != null)
                 {
                     await _repository.DeleteAsync(pEntity);
@@ -118,6 +112,15 @@ public class ComicSubscriptionWebService : ApplicationService, IComicSubscriptio
         if (Regex.IsMatch(comicInfo.NowEpisode, "完结"))
         {
             return (false, "番剧已完结，无法订阅");
+        }
+
+        // 查重
+        var entity = await _repository.FindAsync(item => item.CreateUserId == userId &&
+                                                         item.ComicId == comicId &&
+                                                         item.ScheduledType == ScheduledType.Private);
+        if (entity != null)
+        {
+            return (false, "番剧已订阅，无法重复订阅");
         }
 
         var e = await _repository.InsertAsync(new ComicSubscriptionEntity

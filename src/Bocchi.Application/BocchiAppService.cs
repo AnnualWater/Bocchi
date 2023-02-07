@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Bocchi.Localization;
+﻿using Bocchi.Localization;
 using Volo.Abp.Application.Services;
 
 namespace Bocchi;

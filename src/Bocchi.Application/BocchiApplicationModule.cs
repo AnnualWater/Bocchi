@@ -1,9 +1,9 @@
-﻿using System.Threading.Tasks;
-using Bocchi.SoraBotPlugin.ComicSubscription;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Account;
 using Volo.Abp.AutoMapper;
-using Volo.Abp.BackgroundJobs.Hangfire;
 using Volo.Abp.BackgroundWorkers;
 using Volo.Abp.BackgroundWorkers.Hangfire;
 using Volo.Abp.FeatureManagement;
@@ -31,7 +31,17 @@ public class BocchiApplicationModule : AbpModule
     public override async Task OnApplicationInitializationAsync(ApplicationInitializationContext context)
     {
         await base.OnApplicationInitializationAsync(context);
-        await context.AddBackgroundWorkerAsync<ComicSubscriptionWorker>();
+        // 自动添加定时任务
+        var workers = AppDomain.CurrentDomain.GetAssemblies()
+            .Where(a => a.FullName != null && a.FullName.Contains(nameof(Bocchi))).SelectMany(a =>
+                a.GetTypes().Where(type =>
+                    !type.IsAbstract && !type.IsInterface &&
+                    type.GetBaseClasses().Contains(typeof(HangfireBackgroundWorkerBase))));
+
+        foreach (var worker in workers)
+        {
+            await context.AddBackgroundWorkerAsync(worker);
+        }
     }
 
     public override void ConfigureServices(ServiceConfigurationContext context)

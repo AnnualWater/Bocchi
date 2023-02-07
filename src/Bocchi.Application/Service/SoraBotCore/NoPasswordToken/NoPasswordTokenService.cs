@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Bocchi.Core;
 using Volo.Abp.DependencyInjection;
@@ -32,13 +33,26 @@ public class NoPasswordTokenService : INoPasswordTokenService, ISingletonDepende
 
     public async Task<string> GetLoginToken(long userId)
     {
+        // 清除超时Token
+        CleanOverTime();
+        // 查询是否有未超时Token
+        var hasToken = _cache.FirstOrDefault(item => item.Value.userId == userId.ToString());
+        if (!string.IsNullOrEmpty(hasToken.Key))
+        {
+            _cache.Remove(hasToken.Key);
+        }
+        // 生成Token
         var token = Guid.NewGuid().ToString().Replace("-", "");
+        // 检查有无绑定的User
         var rel = await _repository.FindAsync(e => e.TencentUserId == userId);
         if (rel == null)
         {
             var identityUserId = _guidGenerator.Create();
             await _identityUserManager.CreateAsync(
-                new IdentityUser(identityUserId, $"qq{userId}", $"{userId}@qq.com"),
+                new IdentityUser(identityUserId, $"qq{userId}", $"{userId}@qq.com")
+                {
+                    Name = $"qq{userId}"
+                },
                 $"Qq@{userId}");
             await _repository.InsertAsync(new IdentityUserIdToTencentUserIdEntity
             {
@@ -57,19 +71,24 @@ public class NoPasswordTokenService : INoPasswordTokenService, ISingletonDepende
 
     public Task<string> GetUserId(string token)
     {
+        CleanOverTime();
         if (!_cache.ContainsKey(token))
         {
             return Task.FromResult(Guid.Empty.ToString());
         }
 
-        var (userId, date) = _cache[token];
-        if (date - DateTime.Now > _overtime)
-        {
-            _cache.Remove(token);
-            return Task.FromResult(Guid.Empty.ToString());
-        }
+        var (userId, _) = _cache[token];
 
         _cache.Remove(token);
         return Task.FromResult(userId);
+    }
+
+    private void CleanOverTime()
+    {
+        _cache.RemoveAll(item =>
+        {
+            var (_, (_, date)) = item;
+            return date - DateTime.Now > _overtime;
+        });
     }
 }

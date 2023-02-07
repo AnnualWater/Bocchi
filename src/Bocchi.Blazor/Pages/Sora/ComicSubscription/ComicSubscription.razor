@@ -18,25 +18,20 @@
         }
     </HeaderTemplate>
     <BodyTemplate>
-        <Table ShowEmpty="true" TItem="ComicSubscriptionDto" Items="@_data" IsBordered="true" IsStriped="true">
+        <Table ShowEmpty="true" TItem="ComicSubscriptionDto" OnQueryAsync="QueryDataAsync" IsBordered="true" IsStriped="true">
             <TableColumns>
                 <TableColumn Align="Alignment.Center" Text="ID" @bind-Field="@context.ComicId"/>
-                <TableColumn Align="Alignment.Center" Text="番剧名" @bind-Field="@context.Title"/>
+                <TableColumn Align="Alignment.Center" DefaultSort="true" Sortable="true" Text="番剧名" @bind-Field="@context.Title"/>
                 <TableColumn Align="Alignment.Center" Text="当前集数" @bind-Field="@context.Episode"/>
                 <TableColumn Align="Alignment.Center" Text="更新信息" @bind-Field="@context.UpdateInfo"/>
-                <TableColumn Align="Alignment.Center" Text="完结" @bind-Field="@context.IsEnd"/>
+                <TableColumn Align="Alignment.Center" Filterable="true" Text="完结" @bind-Field="@context.IsEnd"/>
                 <TableColumn Width="100" Text="操作" @bind-Field="@context.ComicId">
                     <Template Context="value">
                         <PopConfirmButton Placement="Placement.Top" Color="Color.Danger" ConfirmIcon="fa-solid fa-triangle-exclamation text-danger"
                                           ConfirmButtonColor="Color.Danger" Text="删除订阅" Content="确定删除数据吗？"
                                           OnConfirm="async () => { await DelSubscription(value.Value); }"/>
-
-                        @* <Button Color="Color.Warning" Text="删除订阅" OnClick="async () => { await DelSubscription(value.Value); }"></Button> *@
-
                     </Template>
                 </TableColumn>
-
-
             </TableColumns>
         </Table>
     </BodyTemplate>
@@ -65,6 +60,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
         _type = TypeStr?.ToLower() switch
         {
             "group" => ScheduledType.Group,
@@ -72,8 +68,6 @@
             _ => _type
             };
         await ResetData();
-
-        await base.OnInitializedAsync();
     }
 
     async Task ResetData()
@@ -114,5 +108,34 @@
     private void GotoSearch()
     {
         NavigationManager.NavigateTo("/sora/comic_subscription/search");
+    }
+
+    private Task<QueryData<ComicSubscriptionDto>> QueryDataAsync(QueryPageOptions options)
+    {
+        IEnumerable<ComicSubscriptionDto> items = _data;
+    // 过滤
+        var isFiltered = false;
+        if (options.Filters.Any())
+        {
+            items = items.Where(options.Filters.GetFilterFunc<ComicSubscriptionDto>());
+            isFiltered = true;
+        }
+        var isSorted = false;
+        if (!string.IsNullOrEmpty(options.SortName))
+        {
+    // 外部未进行排序，内部自动进行排序处理
+            var invoker = Utility.GetSortFunc<ComicSubscriptionDto>();
+            items = invoker(items, options.SortName, options.SortOrder);
+            isSorted = true;
+        }
+
+        var itemList = items as ComicSubscriptionDto[] ?? items.ToArray();
+        return Task.FromResult(new QueryData<ComicSubscriptionDto>()
+        {
+            Items = itemList,
+            TotalCount = itemList.Count(),
+            IsSorted = isSorted,
+            IsFiltered = isFiltered
+        });
     }
 }

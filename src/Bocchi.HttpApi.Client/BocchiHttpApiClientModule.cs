@@ -1,7 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.Account;
+using Volo.Abp.Account.ClientProxies;
 using Volo.Abp.FeatureManagement;
+using Volo.Abp.FeatureManagement.ClientProxies;
 using Volo.Abp.Identity;
+using Volo.Abp.Identity.ClientProxies;
 using Volo.Abp.Modularity;
 using Volo.Abp.PermissionManagement;
 using Volo.Abp.TenantManagement;

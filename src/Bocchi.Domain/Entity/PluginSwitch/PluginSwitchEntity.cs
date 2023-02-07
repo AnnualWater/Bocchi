@@ -3,7 +3,7 @@ using Volo.Abp.Domain.Entities;
 
 namespace Bocchi.PluginSwitch;
 
-public class PluginSwitchEntity : Entity<Guid>
+public class PluginSwitchEntity : AggregateRoot<Guid>
 {
     public string PluginFullName { get; set; }
     public long RecordId { get; set; }

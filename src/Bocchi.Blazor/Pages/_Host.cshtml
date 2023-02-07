@@ -3,42 +3,32 @@
 @using System.Globalization
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Mvc.TagHelpers
+@using Microsoft.Extensions.Configuration
 @using Volo.Abp.AspNetCore.Components.Server.BasicTheme.Bundling
 @using Volo.Abp.AspNetCore.Mvc.UI.Bundling.TagHelpers
-@using Volo.Abp.Localization
+@inject IConfiguration Configuration
 @{
     Layout = null;
-    var rtl = CultureHelper.IsRtl ? "rtl" : string.Empty;
 }
 
 <!DOCTYPE html>
-<html lang="@CultureInfo.CurrentCulture.Name" dir="@rtl">
+<html lang="@CultureInfo.CurrentCulture.Name">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    @* 自定义Title *@
     <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered"/>
     <title>Bocchi机器人</title>
     <base href="~/"/>
-
-    <abp-style-bundle name="@BlazorBasicThemeBundles.Styles.Global"/>
     @* BootStrapBlazor *@
     <link href="_content/BootstrapBlazor.FontAwesome/css/font-awesome.min.css" rel="stylesheet">
     <link href="_content/BootstrapBlazor/css/bootstrap.blazor.bundle.min.css" rel="stylesheet">
+    @* CSS隔离 *@
+    <link href="Bocchi.Blazor.styles.css" rel="stylesheet"/>
 </head>
-<body class="abp-application-layout bg-light @rtl">
+<body>
 
 <component type="typeof(App)" render-mode="Server"/>
-
-<div id="blazor-error-ui">
-    <environment include="Staging,Production">
-        An error has occurred. This application may no longer respond until reloaded.
-    </environment>
-    <environment include="Development">
-        An unhandled exception has occurred. See browser dev tools for details.
-    </environment>
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
-</div>
 
 <abp-script-bundle name="@BlazorBasicThemeBundles.Scripts.Global"/>
 @* 音乐播放器 *@
@@ -48,7 +38,15 @@
     <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
     <!-- require MetingJS -->
     <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
-
+    @{
+        var metingJsApi = Configuration.GetValue("MetingJsApi", string.Empty);
+        if (!string.IsNullOrEmpty(metingJsApi))
+        {
+            <script>
+            var meting_api='@metingJsApi/api?server=:server&type=:type&id=:id&auth=:auth&r=:r';
+            </script>
+        }
+    }
     <meting-js
         server="netease"
         type="playlist"
@@ -58,8 +56,6 @@
 </div>
 @* BootStrapBlazor *@
 <script src="_content/BootstrapBlazor/js/bootstrap.blazor.bundle.min.js"></script>
-@* clipboard.js *@
-<script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
 </body>
 
 

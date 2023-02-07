@@ -12,6 +12,11 @@ public class BocchiMenuContributor : IMenuContributor
 {
     public async Task ConfigureMenuAsync(MenuConfigurationContext context)
     {
+        // 不修改User菜单
+        if (context.Menu.Name == "User") 
+        {
+            return;
+        }
         context.Menu.Items.RemoveAll(_ => true);
         context.Menu.Items.Insert(
             0,

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Bocchi.PluginSwitch;
 using Microsoft.Extensions.Configuration;
@@ -12,11 +11,11 @@ using Sora.EventArgs.SoraEvent;
 using Sora.Interfaces;
 using Sora.Net.Config;
 using Volo.Abp.DependencyInjection;
-using Volo.Abp.Threading;
 
 namespace Bocchi.SoraBotCore;
 
-public sealed class SoraBotService : ISoraBotService, ISingletonDependency
+public sealed class
+    SoraBotService : ISoraBotService, ISingletonDependency
 {
     /// <summary>
     /// Sora服务
@@ -28,32 +27,23 @@ public sealed class SoraBotService : ISoraBotService, ISingletonDependency
     /// </summary>
     private readonly Dictionary<long, Guid> _idList = new();
 
-    /// <summary>
-    /// 插件表
-    /// </summary>
-    private readonly IDictionary<Type, IDictionary<EventEnum, List<MethodInfo>>> _pluginMethod =
-        new Dictionary<Type, IDictionary<EventEnum, List<MethodInfo>>>();
+    private readonly Dictionary<EventEnum, List<Type>> _plugins = new()
+    {
+        { EventEnum.OnGroupMessage, new List<Type>() },
+        { EventEnum.OnPrivateMessage, new List<Type>() },
+        { EventEnum.OnGroupMemberChange, new List<Type>() },
+        { EventEnum.OnGroupMemberMute, new List<Type>() },
+        { EventEnum.OnGroupRecall, new List<Type>() },
+        { EventEnum.OnGroupPoke, new List<Type>() },
+        { EventEnum.OnGroupRequest, new List<Type>() },
+        { EventEnum.OnGroupAdminChange, new List<Type>() },
+        { EventEnum.OnGroupCardUpdate, new List<Type>() },
+        { EventEnum.OnFriendRecall, new List<Type>() },
+        { EventEnum.OnFriendRequest, new List<Type>() },
+        { EventEnum.OnFriendAdd, new List<Type>() }
+    };
 
-    /// <summary>
-    /// 带Session的插件表
-    /// </summary>
-    private readonly IDictionary<Type, IDictionary<EventEnum, List<MethodInfo>>> _sessionPluginMethod =
-        new Dictionary<Type, IDictionary<EventEnum, List<MethodInfo>>>();
-
-    /// <summary>
-    /// 依赖注入获取插件
-    /// </summary>
-    private readonly IServiceProvider _serviceProvider;
-
-    /// <summary>
-    /// 参数表服务
-    /// </summary>
-    private readonly IPluginParamService _pluginParamService;
-
-    /// <summary>
-    /// Session管理器
-    /// </summary>
-    private readonly ISessionManager _sessionManager;
+    private readonly ISessionPluginService _sessionPluginService;
 
     /// <summary>
     /// 插件开关服务
@@ -64,14 +54,12 @@ public sealed class SoraBotService : ISoraBotService, ISingletonDependency
     private readonly ILogger<SoraBotService> _logger;
 
     public SoraBotService(IServiceProvider serviceProvider, IConfiguration configuration,
-        ILogger<SoraBotService> logger, IPluginParamService pluginParamService, ISessionManager sessionManager,
-        IPluginSwitchService pluginSwitchService)
+        ILogger<SoraBotService> logger, IPluginSwitchService pluginSwitchService,
+        ISessionPluginService sessionPluginService)
     {
-        _serviceProvider = serviceProvider;
         _logger = logger;
-        _pluginParamService = pluginParamService;
-        _sessionManager = sessionManager;
         _pluginSwitchService = pluginSwitchService;
+        _sessionPluginService = sessionPluginService;
         // 获取配置
         _logger.LogDebug("初始化SoraBotService");
         var defaultConfig = new ServerConfig();
@@ -114,16 +102,12 @@ public sealed class SoraBotService : ISoraBotService, ISingletonDependency
         var pluginsTypes = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(a => a.GetTypes().Where(type =>
                 !type.IsAbstract && !type.IsInterface &&
-                type.GetBaseClasses().Contains(typeof(Plugin))));
-        var sessionPluginTypes = AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(a => a.GetTypes().Where(type =>
-                !type.IsAbstract && !type.IsInterface &&
-                type.GetBaseClasses().Contains(typeof(PluginWithSession))));
+                type.GetInterfaces().Contains(typeof(IPlugin))));
         // 获取所有能正常通过IOC获取的插件
-        var plugins = new List<Plugin>();
+        var plugins = new List<IPlugin>();
         foreach (var pluginType in pluginsTypes)
         {
-            var plugin = (Plugin)serviceProvider.GetService(pluginType);
+            var plugin = (IPlugin)serviceProvider.GetService(pluginType);
             if (plugin == null)
             {
                 _logger.LogWarning("插件{PluginTypeFullName}载入失败", pluginType.FullName);
@@ -135,52 +119,70 @@ public sealed class SoraBotService : ISoraBotService, ISingletonDependency
             plugins.Add(plugin);
         }
 
-        var sessionPlugins = new List<PluginWithSession>();
-        foreach (var pluginType in sessionPluginTypes)
-        {
-            var plugin = (PluginWithSession)serviceProvider.GetService(pluginType);
-            if (plugin == null)
-            {
-                _logger.LogWarning("插件{PluginTypeFullName}载入失败", pluginType.FullName);
-                continue;
-            }
-
-            _logger.LogDebug("载入插件[{Plugin}]", plugin.GetType().FullName);
-
-            sessionPlugins.Add(plugin);
-        }
-
         // 通过插件优先级排序
         foreach (var plugin in plugins.OrderBy(plugin => plugin.Priority))
         {
-            _pluginMethod[plugin.GetType()] = new Dictionary<EventEnum, List<MethodInfo>>
+            if (plugin is IOnGroupMessagePlugin)
             {
-                { EventEnum.OnGroupMessage, plugin.GetAllPluginMethod<OnGroupMessageAttribute>().ToList() },
-                { EventEnum.OnPrivateMessage, plugin.GetAllPluginMethod<OnPrivateMessageAttribute>().ToList() },
-                { EventEnum.OnGroupMemberChange, plugin.GetAllPluginMethod<OnGroupMemberChangeAttribute>().ToList() },
-                { EventEnum.OnGroupMemberMute, plugin.GetAllPluginMethod<OnGroupMemberMuteAttribute>().ToList() },
-                { EventEnum.OnGroupRecall, plugin.GetAllPluginMethod<OnGroupRecallAttribute>().ToList() },
-                { EventEnum.OnGroupPoke, plugin.GetAllPluginMethod<OnGroupPokeAttribute>().ToList() },
-                { EventEnum.OnGroupRequest, plugin.GetAllPluginMethod<OnGroupRequestAttribute>().ToList() },
-                { EventEnum.OnGroupAdminChange, plugin.GetAllPluginMethod<OnGroupAdminChangeAttribute>().ToList() },
-                { EventEnum.OnGroupCardUpdate, plugin.GetAllPluginMethod<OnGroupCardUpdateAttribute>().ToList() },
-                { EventEnum.OnFriendRecall, plugin.GetAllPluginMethod<OnFriendRecallAttribute>().ToList() },
-                { EventEnum.OnFriendRequest, plugin.GetAllPluginMethod<OnFriendRequestAttribute>().ToList() },
-                { EventEnum.OnFriendAdd, plugin.GetAllPluginMethod<OnFriendAddAttribute>().ToList() }
-            };
+                _plugins[EventEnum.OnGroupMessage].Add(plugin.GetType());
+            }
+
+            if (plugin is IOnPrivateMessagePlugin)
+            {
+                _plugins[EventEnum.OnPrivateMessage].Add(plugin.GetType());
+            }
+
+            if (plugin is IOnGroupMemberChangePlugin)
+            {
+                _plugins[EventEnum.OnGroupMemberChange].Add(plugin.GetType());
+            }
+
+            if (plugin is IOnGroupMemberMutePlugin)
+            {
+                _plugins[EventEnum.OnGroupMemberMute].Add(plugin.GetType());
+            }
+
+            if (plugin is IOnGroupRecallPlugin)
+            {
+                _plugins[EventEnum.OnGroupRecall].Add(plugin.GetType());
+            }
+
+            if (plugin is IOnGroupPokePlugin)
+            {
+                _plugins[EventEnum.OnGroupPoke].Add(plugin.GetType());
+            }
+
+            if (plugin is IOnGroupRequestPlugin)
+            {
+                _plugins[EventEnum.OnGroupRequest].Add(plugin.GetType());
+            }
+
+            if (plugin is IOnGroupAdminChangePlugin)
+            {
+                _plugins[EventEnum.OnGroupAdminChange].Add(plugin.GetType());
+            }
+
+            if (plugin is IOnGroupCardUpdatePlugin)
+            {
+                _plugins[EventEnum.OnGroupCardUpdate].Add(plugin.GetType());
+            }
+
+            if (plugin is IOnFriendRecallPlugin)
+            {
+                _plugins[EventEnum.OnFriendRecall].Add(plugin.GetType());
+            }
+
+            if (plugin is IOnFriendRequestPlugin)
+            {
+                _plugins[EventEnum.OnFriendRequest].Add(plugin.GetType());
+            }
+
+            if (plugin is IOnFriendAddPlugin)
+            {
+                _plugins[EventEnum.OnFriendAdd].Add(plugin.GetType());
+            }
         }
 
-        foreach (var pluginWithSession in sessionPlugins.OrderBy(plugin => plugin.Priority))
-        {
-            _sessionPluginMethod[pluginWithSession.GetType()] = new Dictionary<EventEnum, List<MethodInfo>>
-            {
-                { EventEnum.OnGroupMessage, pluginWithSession.GetAllPluginMethod<OnGroupMessageAttribute>().ToList() },
-                {
-                    EventEnum.OnPrivateMessage,
-                    pluginWithSession.GetAllPluginMethod<OnPrivateMessageAttribute>().ToList()
-                }
-            };
-        }
 
         // 连接方法
 
@@ -188,7 +190,6 @@ public sealed class SoraBotService : ISoraBotService, ISingletonDependency
 
         _service.Event.OnGroupMessage += async (type, args) =>
         {
-            await InvokeSessionPluginMethod(EventEnum.OnGroupMessage, type, args);
             await InvokePluginMethod(EventEnum.OnGroupMessage, type, args);
         };
         _service.Event.OnGroupMemberChange += async (type, args) =>
@@ -226,7 +227,6 @@ public sealed class SoraBotService : ISoraBotService, ISingletonDependency
 
         _service.Event.OnPrivateMessage += async (type, args) =>
         {
-            await InvokeSessionPluginMethod(EventEnum.OnPrivateMessage, type, args);
             await InvokePluginMethod(EventEnum.OnPrivateMessage, type, args);
         };
         _service.Event.OnFriendRecall += async (type, args) =>
@@ -250,131 +250,9 @@ public sealed class SoraBotService : ISoraBotService, ISingletonDependency
         #endregion
     }
 
-    private async Task InvokeSessionPluginMethod(EventEnum eventType, string type, BaseMessageEventArgs args)
-    {
-        void EndPlugin(Guid sessionId, Type pluginType, BaseMessageEventArgs msg)
-        {
-            switch (msg)
-            {
-                case PrivateMessageEventArgs privateMessageEventArgs:
-                    _sessionManager.EndPrivateSession(sessionId, privateMessageEventArgs.SenderInfo.UserId, pluginType);
-                    break;
-                case GroupMessageEventArgs groupMessageEventArgs:
-                    _sessionManager.EndGroupSession(sessionId, groupMessageEventArgs.SourceGroup.Id,
-                        groupMessageEventArgs.SenderInfo.UserId, pluginType);
-                    break;
-            }
-        }
-
-        foreach (var (pluginType, methods) in _sessionPluginMethod)
-        {
-            var allow = args switch
-            {
-                PrivateMessageEventArgs privateMessageEventArgs => await _pluginSwitchService.CheckPlugin(
-                    pluginType.FullName, privateMessageEventArgs.SenderInfo.UserId, PluginSwitchType.Private),
-                GroupMessageEventArgs groupMessageEventArgs => await _pluginSwitchService.CheckPlugin(
-                    pluginType.FullName, groupMessageEventArgs.SourceGroup.Id, PluginSwitchType.Group),
-                _ => false
-            };
-            if (!allow)
-            {
-                continue;
-            }
-
-            var sessionId = args switch
-            {
-                PrivateMessageEventArgs privateMessageEventArgs => _sessionManager.GetPrivateSession(
-                    privateMessageEventArgs.SenderInfo.UserId, pluginType),
-                GroupMessageEventArgs groupMessageEventArgs => _sessionManager.GetGroupSession(
-                    groupMessageEventArgs.SourceGroup.Id, groupMessageEventArgs.SenderInfo.UserId, pluginType),
-                _ => Guid.Empty
-            };
-
-            _pluginParamService.InitParamList(sessionId, new Dictionary<string, object>
-            {
-                { "type", type },
-                { "args", args }
-            });
-
-            var plugin = _sessionManager.GetPlugin(sessionId, pluginType);
-            if (plugin == null)
-            {
-                _logger.LogWarning("插件{PluginTypeFullName}载入失败", pluginType.FullName);
-                continue;
-            }
-
-            var i = plugin.GetFinished();
-            foreach (var methodInfo in methods[eventType])
-            {
-                if (i != 0)
-                {
-                    i--;
-                    continue;
-                }
-
-                var pList = new List<object>();
-                foreach (var parameter in methodInfo.GetParameters())
-                {
-                    // 名称匹配
-                    if (_pluginParamService.ContainsKey(sessionId, parameter.Name))
-                    {
-                        pList.Add(_pluginParamService.GetValue(sessionId, parameter.Name));
-                    }
-                    else
-                    {
-                        // 类型匹配
-                        var p = _pluginParamService.ContainsValueType(sessionId, parameter.ParameterType);
-                        if (p == null || !p.Any())
-                        {
-                            _logger.LogWarning("方法[{Plugin}]-[{Method}]的参数[{Param}]未找到合适的对象！",
-                                plugin.GetType().FullName, methodInfo.Name, parameter.Name);
-                            pList.Add(null);
-                        }
-
-                        pList.Add(p.First().Value);
-                    }
-                }
-
-                try
-                {
-                    if (methodInfo.IsAsync())
-                    {
-                        var task = (Task)methodInfo.Invoke(plugin, pList.ToArray());
-                        if (task != null)
-                        {
-                            await task;
-                        }
-                    }
-                    else
-                    {
-                        methodInfo.Invoke(plugin, pList.ToArray());
-                    }
-                }
-                catch (PluginFinishException)
-                {
-                    _logger.LogDebug("插件[{Plugin}]提前完成", pluginType.FullName);
-                    EndPlugin(sessionId, pluginType, args);
-                    break;
-                }
-                catch (MethodWaitNewEventException)
-                {
-                    _logger.LogDebug("插件[{Plugin}]的方法[{Method}]等待新事件", pluginType.FullName, methodInfo.Name);
-                    break;
-                }
-
-                plugin.FinishMethod();
-            }
-
-            if (plugin.GetFinished() >= methods[eventType].Count)
-            {
-                EndPlugin(sessionId, pluginType, args);
-            }
-        }
-    }
-
     private async Task InvokePluginMethod(EventEnum eventType, string type, BaseSoraEventArgs args)
     {
-        foreach (var (pluginType, methods) in _pluginMethod)
+        foreach (var pluginType in _plugins[eventType])
         {
             var allow = args switch
             {
@@ -389,46 +267,81 @@ public sealed class SoraBotService : ISoraBotService, ISingletonDependency
                 continue;
             }
 
-            foreach (var methodInfo in methods[eventType])
+            long userId = 0, groupId = 0;
+            if (args is BaseMessageEventArgs messageEventArgs)
             {
-                var plugin = (Plugin)_serviceProvider.GetService(pluginType);
-                if (plugin == null)
-                {
-                    _logger.LogWarning("插件{PluginTypeFullName}载入失败", pluginType.FullName);
-                    continue;
-                }
+                userId = messageEventArgs.Sender.Id;
+            }
 
-                var pList = new List<object>();
-                foreach (var parameterInfo in methodInfo.GetParameters())
-                {
-                    if (parameterInfo.ParameterType == args.GetType())
-                    {
-                        pList.Add(args);
-                        continue;
-                    }
+            if (args is GroupMessageEventArgs gMessageEventArgs)
+            {
+                groupId = gMessageEventArgs.SourceGroup.Id;
+            }
 
-                    if (parameterInfo.Name == "type" && parameterInfo.ParameterType == typeof(string))
-                    {
-                        pList.Add(type);
-                        continue;
-                    }
+            // 获取plugin
+            var plugin = _sessionPluginService.GetPlugin(groupId, userId, pluginType);
 
-                    pList.Add(null);
-                }
-
-                if (methodInfo.IsAsync())
+            try
+            {
+                switch (eventType)
                 {
-                    var task = (Task)methodInfo.Invoke(plugin, pList.ToArray());
-                    if (task != null)
-                    {
-                        await task;
-                    }
-                }
-                else
-                {
-                    methodInfo.Invoke(plugin, pList.ToArray());
+                    case EventEnum.OnGroupMessage:
+                        await ((IOnGroupMessagePlugin)plugin).OnGroupMessage.Invoke(type, (GroupMessageEventArgs)args);
+                        break;
+                    case EventEnum.OnGroupMemberChange:
+                        await ((IOnGroupMemberChangePlugin)plugin).OnGroupMemberChange.Invoke(type,
+                            (GroupMemberChangeEventArgs)args);
+                        break;
+                    case EventEnum.OnGroupMemberMute:
+                        await ((IOnGroupMemberMutePlugin)plugin).OnGroupMemberMute.Invoke(type,
+                            (GroupMuteEventArgs)args);
+                        break;
+                    case EventEnum.OnGroupRecall:
+                        await ((IOnGroupRecallPlugin)plugin).OnGroupRecall.Invoke(type, (GroupRecallEventArgs)args);
+                        break;
+                    case EventEnum.OnGroupPoke:
+                        await ((IOnGroupPokePlugin)plugin).OnGroupPoke.Invoke(type, (GroupPokeEventArgs)args);
+                        break;
+                    case EventEnum.OnGroupRequest:
+                        await ((IOnGroupRequestPlugin)plugin).OnGroupRequest.Invoke(type,
+                            (AddGroupRequestEventArgs)args);
+                        break;
+                    case EventEnum.OnGroupAdminChange:
+                        await ((IOnGroupAdminChangePlugin)plugin).OnGroupAdminChange.Invoke(type,
+                            (GroupAdminChangeEventArgs)args);
+                        break;
+                    case EventEnum.OnGroupCardUpdate:
+                        await ((IOnGroupCardUpdatePlugin)plugin).OnGroupCardUpdate.Invoke(type,
+                            (GroupCardUpdateEventArgs)args);
+                        break;
+                    case EventEnum.OnPrivateMessage:
+                        await ((IOnPrivateMessagePlugin)plugin).OnPrivateMessage.Invoke(type,
+                            (PrivateMessageEventArgs)args);
+                        break;
+                    case EventEnum.OnFriendRecall:
+                        await ((IOnFriendRecallPlugin)plugin).OnFriendRecall.Invoke(type, (FriendRecallEventArgs)args);
+                        break;
+                    case EventEnum.OnFriendRequest:
+                        await ((IOnFriendRequestPlugin)plugin).OnFriendRequest.Invoke(type,
+                            (FriendRequestEventArgs)args);
+                        break;
+                    case EventEnum.OnFriendAdd:
+                        await ((IOnFriendAddPlugin)plugin).OnFriendAdd.Invoke(type, (FriendAddEventArgs)args);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(eventType), eventType, null);
                 }
             }
+            catch (WaitPluginException)
+            {
+                continue;
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, "插件[{Plugin}]执行出错！", plugin.GetType().FullName);
+                _sessionPluginService.Finish(groupId, userId, pluginType);
+            }
+            _sessionPluginService.Finish(groupId, userId, pluginType);
         }
     }
 

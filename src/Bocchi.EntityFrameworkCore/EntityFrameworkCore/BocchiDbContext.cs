@@ -93,12 +93,16 @@ public class BocchiDbContext :
             b.ToTable(BocchiConsts.DbTablePrefix + "PluginSwitchItem", BocchiConsts.DbSchema);
             b.ConfigureByConvention(); //auto configure for the base class props
             //...
+            b.HasIndex(e => new { e.PluginSwitchType, e.RecordId, e.PluginFullName }).IsUnique();
         });
         builder.Entity<IdentityUserIdToTencentUserIdEntity>(b =>
         {
             b.ToTable(BocchiConsts.DbTablePrefix + "IdentityUserIdToTencentUserId", BocchiConsts.DbSchema);
             b.ConfigureByConvention(); //auto configure for the base class props
             //...
+            b.HasKey(e => new { e.IdentityUserId, e.TencentUserId });
+            b.HasIndex(e => e.IdentityUserId).IsUnique();
+            b.HasIndex(e => e.TencentUserId).IsUnique();
         });
         builder.Entity<ComicSubscriptionEntity>(b =>
         {

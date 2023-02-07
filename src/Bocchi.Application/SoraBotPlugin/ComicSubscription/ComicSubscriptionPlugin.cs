@@ -10,25 +10,32 @@ using Microsoft.Extensions.Configuration;
 using Sora.Entities;
 using Sora.Entities.Segment;
 using Sora.EventArgs.SoraEvent;
+using Sora.OnebotAdapter;
 using Volo.Abp.Domain.Repositories;
 
 namespace Bocchi.SoraBotPlugin.ComicSubscription;
 
-public class ComicSubscriptionPlugin : PluginWithSession
+public class ComicSubscriptionPlugin : IOnGroupMessagePlugin, IOnPrivateMessagePlugin
 {
+    public int Priority => 100;
+
+    public EventAdapter.EventAsyncCallBackHandler<GroupMessageEventArgs> OnGroupMessage =>
+        async (type, args) => { await Check(args); };
+
+    public EventAdapter.EventAsyncCallBackHandler<PrivateMessageEventArgs> OnPrivateMessage =>
+        async (type, args) => { await Check(args); };
+
     private readonly string _searchUrl;
     private readonly SearchService _searchService;
     private readonly IRepository<ComicSubscriptionEntity> _repository;
     private readonly IScreenShootService _screenShootService;
     private readonly INoPasswordTokenService _tokenService;
     private readonly IWebCoreService _webCoreService;
-    public override uint Priority => 100;
 
-    public ComicSubscriptionPlugin(IPluginParamService pluginParamService, IConfiguration configuration,
+    public ComicSubscriptionPlugin(IConfiguration configuration,
         IScreenShootService screenShootService, SearchService searchService,
         IRepository<ComicSubscriptionEntity> repository, INoPasswordTokenService tokenService,
-        IWebCoreService webCoreService) :
-        base(pluginParamService)
+        IWebCoreService webCoreService)
     {
         _screenShootService = screenShootService;
         _searchService = searchService;
@@ -38,11 +45,9 @@ public class ComicSubscriptionPlugin : PluginWithSession
         _searchUrl = configuration.GetValue<string>("Urls", null) + "/sora/comic_subscription/search";
     }
 
-    [OnGroupMessage(1)]
-    [OnPrivateMessage(1)]
     public async Task Check(BaseMessageEventArgs args)
     {
-        var rawText = args.TryGetRawText();
+        var rawText = args.Message.RawText;
         if (Regex.IsMatch(rawText, "^番剧搜索"))
         {
             await SearchComic(args, rawText);
@@ -79,11 +84,13 @@ public class ComicSubscriptionPlugin : PluginWithSession
         var entity = args switch
         {
             PrivateMessageEventArgs pArgs => await _repository.FindAsync(e =>
-                e.ScheduledType == ScheduledType.Private && e.CreateUserId == pArgs.SenderInfo.UserId &&
+                e.ScheduledType == ScheduledType.Private &&
+                e.CreateUserId == pArgs.SenderInfo.UserId &&
                 e.ComicId == comicId),
-            GroupMessageEventArgs gArgs => await _repository.FindAsync(e => e.ScheduledType == ScheduledType.Group &&
-                                                                            e.GroupId == gArgs.SourceGroup.Id &&
-                                                                            e.ComicId == comicId),
+            GroupMessageEventArgs gArgs => await _repository.FindAsync(e =>
+                e.ScheduledType == ScheduledType.Group &&
+                e.GroupId == gArgs.SourceGroup.Id &&
+                e.ComicId == comicId),
             _ => null
         };
 
@@ -150,13 +157,13 @@ public class ComicSubscriptionPlugin : PluginWithSession
         {
             var token = await _tokenService.GetLoginToken(args.Sender.Id);
             await args.TryReply(
-                $"{await _webCoreService.GetWebUrl()}api/bocchi/account/no_password?token={token}&redirect=/sora/comic_subscription/list?type=private");
+                $"{await _webCoreService.GetWebUrl()}/api/bocchi/account/no_password?token={token}&redirect=/sora/comic_subscription/list?type=private");
         }
 
         if (args is GroupMessageEventArgs gArgs)
         {
             await args.TryReply(
-                $"{await _webCoreService.GetWebUrl()}sora/comic_subscription/list?type=group&gid={gArgs.SourceGroup.Id}");
+                $"{await _webCoreService.GetWebUrl()}/sora/comic_subscription/list?type=group&gid={gArgs.SourceGroup.Id}");
         }
     }
 
