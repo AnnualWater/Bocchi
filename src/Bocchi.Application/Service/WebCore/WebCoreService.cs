@@ -1,9 +1,11 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Bocchi.RestSharp;
 using Bocchi.WebCore.Cpolar;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using RestSharp;
 using Volo.Abp.DependencyInjection;
 
@@ -12,23 +14,25 @@ namespace Bocchi.WebCore;
 public class WebCoreService : IWebCoreService, ITransientDependency
 {
     private readonly IConfiguration _configuration;
+    private readonly ILogger<WebCoreService> _logger;
 
-    private string _tool;
+    private readonly string _tool;
     private string _url;
 
-    public WebCoreService(IConfiguration configuration)
+    public WebCoreService(IConfiguration configuration, ILogger<WebCoreService> logger)
     {
         _configuration = configuration;
+        _logger = logger;
         _tool = _configuration.GetValue("WebCore:Tool", string.Empty);
     }
 
     private async Task ResetUrl()
     {
-        switch (_tool)
+        try
         {
-            case "Cpolar":
-                try
-                {
+            switch (_tool)
+            {
+                case "Cpolar":
                     var url = _configuration.GetValue("WebCore:Cpolar:Url", string.Empty);
                     if (string.IsNullOrEmpty(url))
                     {
@@ -59,13 +63,13 @@ public class WebCoreService : IWebCoreService, ITransientDependency
                     }
 
                     break;
-                }
-                catch
-                {
-                    break;
-                }
+            }
         }
-
+        catch (Exception e)
+        {
+            _logger.LogWarning(e,"加载自定义URL配置出错！");
+        }
+        
         _url = _configuration.GetValue("Urls", "未配置Urls");
     }
 

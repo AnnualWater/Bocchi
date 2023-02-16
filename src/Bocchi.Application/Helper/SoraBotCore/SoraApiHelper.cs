@@ -8,30 +8,33 @@ namespace Bocchi.SoraBotCore;
 
 public static class SoraApiHelper
 {
-    public static async Task<bool> TrySendPrivateMessage(this IEnumerable<SoraApi> soraApis,long userId,MessageBody messageBody)
+    public static async Task<(bool, int)> TrySendPrivateMessage(this IEnumerable<SoraApi> soraApis, long userId,
+        MessageBody messageBody)
     {
         foreach (var soraApi in soraApis)
         {
-            var (apiStatus, messageId) = await soraApi.SendPrivateMessage(userId,messageBody);
-            if (apiStatus.RetCode==ApiStatusType.Ok)
+            var (apiStatus, messageId) = await soraApi.SendPrivateMessage(userId, messageBody);
+            if (apiStatus.RetCode == ApiStatusType.Ok)
             {
-                return true;
+                return (true, messageId);
             }
         }
 
-        return false;
+        return (false, 0);
     }
-    public static async Task<bool> TrySendGroupMessage(this IEnumerable<SoraApi> soraApis,long groupId,MessageBody messageBody)
+
+    public static async Task<(bool, int)> TrySendGroupMessage(this IEnumerable<SoraApi> soraApis, long groupId,
+        MessageBody messageBody)
     {
         foreach (var soraApi in soraApis)
         {
-            var (apiStatus, messageId) = await soraApi.SendGroupMessage(groupId,messageBody);
-            if (apiStatus.RetCode==ApiStatusType.Ok)
+            var (apiStatus, messageId) = await soraApi.SendGroupMessage(groupId, messageBody);
+            if (apiStatus.RetCode == ApiStatusType.Ok)
             {
-                return true;
+                return (true, messageId);
             }
         }
 
-        return false;
+        return (false, 0);
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Bocchi.SoraBotCore;
 using Bocchi.SoraBotCore.NoPasswordToken;
 using Bocchi.WebCore;
@@ -13,7 +12,7 @@ public class LoginPlugin : IOnPrivateMessagePlugin
     public int Priority => 100;
 
     public EventAdapter.EventAsyncCallBackHandler<PrivateMessageEventArgs> OnPrivateMessage =>
-        async (type, args) => { await Check(args); };
+        async (_, args) => { await Check(args); };
 
     private readonly INoPasswordTokenService _tokenService;
     private readonly IWebCoreService _webCoreService;

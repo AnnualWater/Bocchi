@@ -64,7 +64,8 @@ public class ComicSubscriptionWorker : HangfireBackgroundWorkerBase
                     comic.CreateUserId);
 
                 // 发送消息
-                if (await soraApis.TrySendPrivateMessage(comic.CreateUserId, GetUpdateMessage(info)))
+                var (success, _) = await soraApis.TrySendPrivateMessage(comic.CreateUserId, GetUpdateMessage(info));
+                if (success)
                 {
                     comic.Episode = info.NowEpisode;
                     comic.NewLink = info.LastUrl;
@@ -72,6 +73,7 @@ public class ComicSubscriptionWorker : HangfireBackgroundWorkerBase
                     {
                         comic.IsEnd = true;
                     }
+
                     await repository.UpdateAsync(comic, cancellationToken: cancellationToken);
                 }
             }
@@ -96,7 +98,8 @@ public class ComicSubscriptionWorker : HangfireBackgroundWorkerBase
                 Logger.LogInformation("番剧[{Id}:{Title}]更新推送给群[{GroupId}]", comic.ComicId, info.Title,
                     comic.GroupId);
                 // 发送消息
-                if (await soraApis.TrySendGroupMessage(comic.GroupId, GetUpdateMessage(info)))
+                var (success, _) = await soraApis.TrySendGroupMessage(comic.GroupId, GetUpdateMessage(info));
+                if (success)
                 {
                     comic.Episode = info.NowEpisode;
                     comic.NewLink = info.LastUrl;
@@ -104,6 +107,7 @@ public class ComicSubscriptionWorker : HangfireBackgroundWorkerBase
                     {
                         comic.IsEnd = true;
                     }
+
                     await repository.UpdateAsync(comic, cancellationToken: cancellationToken);
                 }
             }

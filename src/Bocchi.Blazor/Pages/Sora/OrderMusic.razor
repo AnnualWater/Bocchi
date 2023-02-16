@@ -7,14 +7,14 @@
         ID : @IdStr
     </HeaderTemplate>
     <BodyTemplate>
-        <div id="@_shoot">
+        <div style="width: fit-content" id="@_shoot">
             <Table ShowEmpty="true" TItem="MusicDataItem" Items="_musicDataItems" IsBordered="true" IsStriped="true"
                    OnAfterRenderCallback="FinishRender">
                 <TableColumns>
-                    <TableColumn Align="Alignment.Center" Width="24" Text="序号" @bind-Field="@context.GetNum"/>
+                    <TableColumn Align="Alignment.Center" Text="序号" @bind-Field="@context.GetNum"/>
                     <TableColumn Align="Alignment.Center" Text="歌曲名" @bind-Field="@context.SongName"/>
                     <TableColumn Align="Alignment.Center" Text="歌手名" @bind-Field="@context.Singer"/>
-                    <TableColumn Align="Alignment.Center" Width="68" Text="平台" @bind-Field="@context.Platform"/>
+                    <TableColumn Align="Alignment.Center" Text="平台" @bind-Field="@context.Platform"/>
                 </TableColumns>
             </Table>
         </div>

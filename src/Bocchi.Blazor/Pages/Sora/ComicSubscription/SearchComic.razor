@@ -1,8 +1,10 @@
 ﻿@page "/sora/comic_subscription/search"
 @using Bocchi.SoraBotPlugin.ComicSubscription
+@using Volo.Abp.Users
 @inject MessageService MessageService
 @inject SearchService SearchService
 @inject IComicSubscriptionWebService ComicSubscriptionWebService
+@inject ICurrentUser CurrentUser
 
 <Card>
     <HeaderTemplate>
@@ -14,7 +16,7 @@
             <Button Text="搜索" OnClick="OnSearchClick"></Button>
             注：此页面暂时只能进行个人订阅
         </div>
-        <div id="@_shoot">
+        <div style="width: fit-content" id="@_shoot">
             <Table ShowLoading="@_tableLoading" ShowEmpty="true" TItem="SearchComicItem" Items="@_data" IsBordered="true" IsStriped="true"
                    OnAfterRenderCallback="FinishRender">
                 <TableColumns>
@@ -29,7 +31,7 @@
                         </TableColumn>
                     }
                     <TableColumn Align="Alignment.Center" Text="更新信息" @bind-Field="@context.UpdateInfo"/>
-                    @if (Shoot != "true")
+                    @if (Shoot != "true" && CurrentUser.IsAuthenticated)
                     {
                         <TableColumn Width="100" Text="操作" @bind-Field="@context.ComicId">
                             <Template Context="value">
@@ -63,11 +65,19 @@
 
 
     string _search = "";
-    private bool _tableLoading = false;
+    private bool _tableLoading;
     private string _shoot = "";
 
     protected override async Task OnInitializedAsync()
     {
+        if (Shoot != "true" && !CurrentUser.IsAuthenticated)
+        {
+            await MessageService.Show(new MessageOption
+            {
+                Content = "未登录，不能在此页面订阅番剧",
+                Color = Color.Warning
+            });
+        }
         await ReGetData();
         await base.OnInitializedAsync();
     }
@@ -109,22 +119,15 @@
     private string GetImgUrl(string value)
     {
         var item = _data.FirstOrDefault(x => x.ComicId == value);
-        if (item == null)
-        {
-            return "";
-        }
-        return item.ImgUrl;
+        return item == null ? string.Empty : item.ImgUrl;
     }
 
     private string GetTitle(string value)
     {
         var item = _data.FirstOrDefault(x => x.ComicId == value);
-        if (item == null)
-        {
-            return "";
-        }
-        return item.Title;
+        return item == null ? string.Empty : item.Title;
     }
+
     private async Task FinishRender(Table<SearchComicItem> arg)
     {
         _shoot = "screenshot";
