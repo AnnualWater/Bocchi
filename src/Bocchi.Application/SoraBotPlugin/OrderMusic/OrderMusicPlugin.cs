@@ -64,7 +64,6 @@ public class OrderMusicPlugin : IOnGroupMessagePlugin, IOnPrivateMessagePlugin
             case FuncStep.Search:
                 await Search(args);
                 break;
-
             case FuncStep.CheckNum:
                 await CheckNum(args);
                 break;
@@ -203,26 +202,30 @@ public class OrderMusicPlugin : IOnGroupMessagePlugin, IOnPrivateMessagePlugin
 
     private async Task CheckNum(BaseMessageEventArgs args)
     {
+        var rawText = args.Message.RawText;
+        if (!Regex.IsMatch(rawText, "^选择[wWqQ][1-9]"))
+        {
+            return;
+        }
+
         if (_music163SearchResponse == null || _musicTencentSearchResponse == null)
         {
             return;
         }
 
-        var numText = args.Message.RawText;
-        if (numText.Any() && (numText[0] == 'c' || numText[0] == 'C'))
+        var numText = Regex.Match(rawText, "[wWqQ][1-9]").Value;
+        if (string.IsNullOrEmpty(numText))
         {
-            return;
+            await args.TryReply("序号错误，请重新输入");
+            throw new WaitPluginException();
         }
 
-        if (Regex.IsMatch(numText, "^[c|C|w|W|q|Q][0-9]$"))
-        {
-            if (!int.TryParse(numText[1].ToString(), out var num))
-            {
-                await args.TryReply("序号错误，请重新输入");
-                throw new WaitPluginException();
-            }
+        var num = int.Parse(Regex.Match(numText, "[1-9]").Value);
 
-            if (numText[0] == 'w' || numText[0] == 'W')
+        switch (numText[0])
+        {
+            case 'w':
+            case 'W':
             {
                 var song = _music163SearchResponse.Where(x => x.Num == num).ToList();
                 if (!song.Any())
@@ -237,8 +240,8 @@ public class OrderMusicPlugin : IOnGroupMessagePlugin, IOnPrivateMessagePlugin
                 }));
                 return;
             }
-
-            if (numText[0] == 'q' || numText[0] == 'Q')
+            case 'q':
+            case 'Q':
             {
                 var song = _musicTencentSearchResponse.Where(x => x.Num == num).ToList();
                 if (!song.Any())

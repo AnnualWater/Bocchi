@@ -17,4 +17,5 @@ public class BocchiMenus
         public const string PluginManager = SoraPrefix + ".PluginManager";
         public const string ComicSubscription = SoraPrefix + ".ComicSubscription";
     }
+
 }

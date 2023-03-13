@@ -20,10 +20,10 @@ public class ComicSubscriptionPlugin : IOnGroupMessagePlugin, IOnPrivateMessageP
     public int Priority => 100;
 
     public EventAdapter.EventAsyncCallBackHandler<GroupMessageEventArgs> OnGroupMessage =>
-        async (type, args) => { await Check(args); };
+        async (_, args) => { await Check(args); };
 
     public EventAdapter.EventAsyncCallBackHandler<PrivateMessageEventArgs> OnPrivateMessage =>
-        async (type, args) => { await Check(args); };
+        async (_, args) => { await Check(args); };
 
     private readonly string _searchUrl;
     private readonly SearchService _searchService;
@@ -45,7 +45,7 @@ public class ComicSubscriptionPlugin : IOnGroupMessagePlugin, IOnPrivateMessageP
         _searchUrl = configuration.GetValue<string>("Urls", null) + "/sora/comic_subscription/search";
     }
 
-    public async Task Check(BaseMessageEventArgs args)
+    private async Task Check(BaseMessageEventArgs args)
     {
         var rawText = args.Message.RawText;
         if (Regex.IsMatch(rawText, "^番剧搜索"))
@@ -163,6 +163,7 @@ public class ComicSubscriptionPlugin : IOnGroupMessagePlugin, IOnPrivateMessageP
         if (args is GroupMessageEventArgs gArgs)
         {
             await args.TryReply(
+                $"请尝试登录后再使用\n" +
                 $"{await _webCoreService.GetWebUrl()}/sora/comic_subscription/list?type=group&gid={gArgs.SourceGroup.Id}");
         }
     }

@@ -8,10 +8,10 @@
 ### 数据迁移
 
 1. 需要在 src/Bocchi.EntityFrameworkCore 执行 \
-   注意此命令需要全局安装dotnet-ef
+   注意此命令需要全局安装`dotnet-ef`
 
-> dotnet ef migrations add $MigrateName$ \
-> dotnet ef database update
+   > dotnet ef migrations add $MigrateName$ \
+   > dotnet ef database update
 
 2. 修改 src/Bocchi.DbMigrator和 src/Bocchi.Blazor 修改appsetting.json中的数据库连接字符串
 3. 然后运行 src/Bocchi.DbMigrator项目执行数据库迁移
@@ -20,12 +20,12 @@
 
 1. 修改src/Bocchi.Blazor的appsettings.json文件，配置Sora相关设置
 2. 运行项目src/Bocchi.Blazor
-3. 修改go-cqhttp配置文件，修改上报类型为<font color=red>array</font>
+3. 修改go-cqhttp配置文件，修改上报类型为`array`
 4. 运行go-cqhttp
 
 ### 当前已实现的功能
 
-1. 自动获取<font color=LightSkyBlue>cpolar</font>穿透网址
+1. 自动获取`cpolar`穿透网址
 2. 点歌插件（163，qq）
 3. 番剧订阅（[樱花](https://www.yhpdm.com)）
 4. 自动同意好友请求
@@ -33,4 +33,5 @@
 
 ### 想要添加的功能
 
-1. 其他功能（咕咕咕——）
+1. 雀魂比赛管理
+2. 其他功能（咕咕咕——）

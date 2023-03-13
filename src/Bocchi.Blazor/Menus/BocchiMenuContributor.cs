@@ -13,10 +13,11 @@ public class BocchiMenuContributor : IMenuContributor
     public async Task ConfigureMenuAsync(MenuConfigurationContext context)
     {
         // 不修改User菜单
-        if (context.Menu.Name == "User") 
+        if (context.Menu.Name == "User")
         {
             return;
         }
+
         context.Menu.Items.RemoveAll(_ => true);
         context.Menu.Items.Insert(
             0,
@@ -49,9 +50,9 @@ public class BocchiMenuContributor : IMenuContributor
                 "番剧订阅管理",
                 "/sora/comic_subscription/list?type=private"
             ));
-            context.Menu.Items.Insert(2,soraMenu);
+            context.Menu.Items.Insert(2, soraMenu);
         }
-
+        
         var settingMenu = new ApplicationMenuItem(
             SettingManagementMenus.GroupName,
             "管理");

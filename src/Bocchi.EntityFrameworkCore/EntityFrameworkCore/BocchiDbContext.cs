@@ -32,6 +32,7 @@ public class BocchiDbContext :
     public DbSet<IdentityUserIdToTencentUserIdEntity> IdentityUserIdToTencentUserIds { get; set; }
 
     public DbSet<ComicSubscriptionEntity> ComicSubscription { get; set; }
+    
 
     #region Entities from the modules
 
@@ -110,5 +111,6 @@ public class BocchiDbContext :
             b.ConfigureByConvention(); //auto configure for the base class props
             //...
         });
+        
     }
 }

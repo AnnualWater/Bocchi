@@ -10,7 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Bocchi.EntityFrameworkCore\Bocchi.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\Bocchi.TestBase\Bocchi.TestBase.csproj" />
-    <PackageReference Include="Volo.Abp.EntityFrameworkCore.Sqlite" Version="7.0.1" />
+    <PackageReference Include="Volo.Abp.EntityFrameworkCore.Sqlite" Version="7.0.2" />
   </ItemGroup>
 
   <ItemGroup>

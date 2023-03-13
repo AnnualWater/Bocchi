@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -8,7 +7,7 @@ using Bocchi.SoraBotCore;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 
-namespace Bocchi.SoraBotPlugin.ComicSubscription;
+namespace Bocchi.SoraBotPlugin.ComicSubscription.WebService;
 
 public class ComicSubscriptionWebService : ApplicationService, IComicSubscriptionWebService
 {

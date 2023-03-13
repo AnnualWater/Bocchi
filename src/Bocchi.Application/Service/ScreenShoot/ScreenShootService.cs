@@ -1,44 +1,23 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+﻿using System.Threading.Tasks;
+using Bocchi.Puppeteer;
 using PuppeteerSharp;
 using Volo.Abp.DependencyInjection;
 
 namespace Bocchi.ScreenShoot;
 
-public class ScreenShootService : IScreenShootService, ISingletonDependency, IDisposable
+public class ScreenShootService : IScreenShootService, ITransientDependency
 {
-    private readonly LaunchOptions _launchOptions = new LaunchOptions { Headless = false };
-    private IBrowser _browser;
-    private readonly ILogger<ScreenShootService> _logger;
+    private readonly IPuppeteerService _puppeteerService;
 
-    public ScreenShootService(ILogger<ScreenShootService> logger)
+    public ScreenShootService(IPuppeteerService puppeteerService)
     {
-        _logger = logger;
-    }
-
-
-    private async Task<IPage> GetPage()
-    {
-        try
-        {
-            _browser ??= await Puppeteer.LaunchAsync(_launchOptions);
-        }
-        catch (FileNotFoundException)
-        {
-            _logger.LogInformation("Chrome驱动不存在！开始下载。。。。。。");
-            var browserFetcher = new BrowserFetcher(Product.Chrome);
-            await browserFetcher.DownloadAsync();
-            _browser ??= await Puppeteer.LaunchAsync(_launchOptions);
-        }
-
-        return await _browser.NewPageAsync();
+        _puppeteerService = puppeteerService;
     }
 
     public async Task<string> ScreenShoot2B64(string url, string xPath)
     {
-        var page = await GetPage();
+        var browser = await _puppeteerService.GetBrowser();
+        var page = await browser.NewPageAsync();
         try
         {
             await page.GoToAsync(url, WaitUntilNavigation.Load);
@@ -56,13 +35,7 @@ public class ScreenShootService : IScreenShootService, ISingletonDependency, IDi
         finally
         {
             await page.CloseAsync();
+            _puppeteerService.RemoveBrowser(browser);
         }
-    }
-
-
-    public void Dispose()
-    {
-        _browser?.CloseAsync().GetAwaiter().GetResult();
-        _browser?.Dispose();
     }
 }
