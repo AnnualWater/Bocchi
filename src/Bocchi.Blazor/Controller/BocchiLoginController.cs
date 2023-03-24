@@ -33,26 +33,21 @@ public class BocchiLoginController : BocchiController
         var user = await _identityUserManager.FindByIdAsync(userId);
         if (user == null)
         {
-            await _identitySecurityLogManager.SaveAsync(new IdentitySecurityLogContext()
-            {
-                Identity = IdentitySecurityLogIdentityConsts.Identity,
-                Action = IdentitySecurityLogActionConsts.LoginFailed
-            });
             return Redirect("/account/login");
         }
 
         await _signInManager.SignInAsync(user, true);
-        if (string.IsNullOrEmpty(redirect))
-        {
-            redirect = "/";
-        }
-
         await _identitySecurityLogManager.SaveAsync(new IdentitySecurityLogContext()
         {
             Identity = IdentitySecurityLogIdentityConsts.Identity,
             UserName = user.UserName,
             Action = IdentitySecurityLogActionConsts.LoginSucceeded
         });
+        
+        if (string.IsNullOrEmpty(redirect))
+        {
+            redirect = "/";
+        }
 
         return Redirect(redirect);
     }

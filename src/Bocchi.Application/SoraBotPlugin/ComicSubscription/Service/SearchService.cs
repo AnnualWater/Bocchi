@@ -22,8 +22,6 @@ public class SearchService : ITransientDependency
 
         var doc = new HtmlDocument();
         doc.LoadHtml(response.Content);
-        // var url = doc.DocumentNode.SelectSingleNode("//div[@class='tabs']/div/div[@style='display:block']/ul/li[last()]/a/@href")
-        //     .GetAttributeValue("href", string.Empty);
 
         var title = doc.DocumentNode
             .SelectSingleNode("//div[@class='tabs']/div/div[@style='display:block']/ul/li[last()]/a")
@@ -36,7 +34,7 @@ public class SearchService : ITransientDependency
             Title = doc.DocumentNode.SelectSingleNode("//div[@class='rate r']/h1/text()").TryGetText(),
             NowEpisode = doc.DocumentNode.SelectSingleNode("//div[@class='sinfo']/p[2]/text()").TryGetText(),
             UpdateInfo = doc.DocumentNode.SelectSingleNode("//div[@class='sinfo']/p[2]/font/text()").TryGetText(),
-            LastUrl = string.IsNullOrEmpty(url) ? "https://www.yhdmp.net/showp/{comicId}.html" : url
+            LastUrl = string.IsNullOrEmpty(url) ? $"{Url}/showp/{{comicId}}.html" : url
         };
     }
 }

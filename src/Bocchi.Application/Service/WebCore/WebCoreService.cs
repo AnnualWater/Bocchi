@@ -41,16 +41,16 @@ public class WebCoreService : IWebCoreService, ITransientDependency
 
                     var client = new RestClient(url);
                     var email = _configuration.GetValue("WebCore:Cpolar:Email", string.Empty);
-                    var psw = _configuration.GetValue("WebCore:Cpolar:Password", string.Empty);
+                    var password = _configuration.GetValue("WebCore:Cpolar:Password", string.Empty);
                     var loginRequest = new RestRequest("/api/v1/user/login");
-                    loginRequest.AddBody(JsonSerializer.Serialize(new { email = email, password = psw }));
+                    loginRequest.AddBody(JsonSerializer.Serialize(new { email, password }));
                     var loginResponse = await client.PostAsync(loginRequest).TryGetValue<CpolarLoginResponse>();
-                    if (loginResponse != null && loginResponse.Code == 20000)
+                    if (loginResponse is { Code: 20000 })
                     {
                         var infoRequest = new RestRequest("/api/v1/tunnels");
                         infoRequest.AddHeader("Authorization", $"Bearer {loginResponse.Data.Token}");
                         var infoResponse = await client.GetAsync(infoRequest).TryGetValue<CpolarInfoResponse>();
-                        if (infoResponse != null && infoResponse.Code == 20000)
+                        if (infoResponse is { Code: 20000 })
                         {
                             var info = infoResponse.CpolarInfoResponseData.Items.FirstOrDefault(item =>
                                 item.Name == "Bocchi");
