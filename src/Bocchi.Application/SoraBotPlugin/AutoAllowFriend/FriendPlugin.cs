@@ -3,14 +3,14 @@ using Bocchi.SoraBotCore;
 using Sora.EventArgs.SoraEvent;
 using Sora.OnebotAdapter;
 
-namespace Bocchi.SoraBotPlugin.Friend;
+namespace Bocchi.AutoAllowFriend;
 
-public class FriendPlugin : IOnFriendRequestPlugin
+public class AutoAllowFriendPlugin : IOnFriendRequestPlugin
 {
     public int Priority => 0;
 
     public EventAdapter.EventAsyncCallBackHandler<FriendRequestEventArgs> OnFriendRequest =>
-        async (type, args) => { await Check(args); };
+        async (_, args) => { await Check(args); };
 
     private async ValueTask Check(FriendRequestEventArgs eventArgs)
     {

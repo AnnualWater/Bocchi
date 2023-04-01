@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.IO;
 using Blazorise.Bootstrap5;
 using Blazorise.Icons.FontAwesome;
-using Bocchi.AuthorizeFilter;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
@@ -14,7 +13,6 @@ using Bocchi.Blazor.Menus;
 using Bocchi.EntityFrameworkCore;
 using Bocchi.Localization;
 using Bocchi.MultiTenancy;
-using Hangfire;
 using Microsoft.AspNetCore.Localization;
 using OpenIddict.Validation.AspNetCore;
 using Volo.Abp;
@@ -252,10 +250,10 @@ public class BocchiBlazorModule : AbpModule
         app.UseSwagger();
         app.UseAbpSwaggerUI(options => { options.SwaggerEndpoint("/swagger/v1/swagger.json", "Bocchi API"); });
         // Hangfire仪表盘
-        app.UseHangfireDashboard("/hangfire", new DashboardOptions
-        {
-            AsyncAuthorization = new[] { new CustomHangfireAuthorizeFilter() }
-        });
+        // app.UseHangfireDashboard("/hangfire", new DashboardOptions
+        // {
+        //     AsyncAuthorization = new[] { new CustomHangfireAuthorizeFilter() }
+        // });
         app.UseConfiguredEndpoints();
     }
 }

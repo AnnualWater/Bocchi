@@ -12,6 +12,10 @@ public class BocchiPermissionDefinitionProvider : PermissionDefinitionProvider
         //Define your own permissions here. Example:
         //myGroup.AddPermission(BocchiPermissions.MyPermission1, L("Permission:MyPermission1"));
 
+        var openAiApiGroup = context.AddGroup(BocchiPermissions.OpenAiApi.Default,L("Permission:BocchiPermissions.OpenAiApi.Default"));
+        openAiApiGroup.AddPermission(BocchiPermissions.OpenAiApi.Chat,
+            L("Permission:BocchiPermissions.OpenAiApi.Chat"));
+
     }
 
     private static LocalizableString L(string name)

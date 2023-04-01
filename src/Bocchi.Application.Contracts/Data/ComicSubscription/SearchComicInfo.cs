@@ -1,4 +1,4 @@
-﻿namespace Bocchi.SoraBotPlugin.ComicSubscription;
+﻿namespace Bocchi.ComicSubscription;
 
 public class SearchComicInfo
 {

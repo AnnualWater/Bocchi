@@ -4,7 +4,7 @@ using HtmlAgilityPack;
 using RestSharp;
 using Volo.Abp.DependencyInjection;
 
-namespace Bocchi.SoraBotPlugin.ComicSubscription;
+namespace Bocchi.ComicSubscription;
 
 public class SearchService : ITransientDependency
 {

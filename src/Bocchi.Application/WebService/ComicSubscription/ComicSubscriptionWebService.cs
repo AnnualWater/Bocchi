@@ -2,12 +2,11 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Bocchi.ComicSubscription;
 using Bocchi.SoraBotCore;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 
-namespace Bocchi.SoraBotPlugin.ComicSubscription.WebService;
+namespace Bocchi.ComicSubscription;
 
 public class ComicSubscriptionWebService : ApplicationService, IComicSubscriptionWebService
 {

@@ -1,0 +1,65 @@
+﻿@page "/open_ai/chat/"
+@using Bocchi.Permissions
+@using Bocchi.OpenAi
+@attribute [Authorize(BocchiPermissions.OpenAiApi.Chat)]
+@inject IChatService ChatService
+
+<div>ChatGPT Page</div>
+<div>
+    @foreach (var item in _messages)
+    {
+        if (item.Role == "user")
+        {
+            <div>
+                <div>User:</div>
+                <div>@item.Content</div>
+            </div>
+        }
+        if (item.Role == "assistant")
+        {
+            <div>
+                <div>GPT:</div>
+                <div>
+                    <CherryMarkdown Value="@item.Content" IsViewer="true"/>
+                </div>
+            </div>
+        }
+        if (item.Role == "error")
+        {
+            <div>ERR:</div>
+            <div>@item.Content</div>
+        }
+    }
+</div>
+<div>请输入消息</div>
+<Textarea @bind-Value="_input" IsDisabled="_disabledInput"></Textarea>
+<Button OnClick="SubjectChat" Text="提交" IsDisabled="_disabledInput"></Button>
+
+@code {
+    private readonly List<ChatMessage> _messages = new();
+    private string _input;
+    private bool _disabledInput;
+
+    private async Task SubjectChat()
+    {
+        try
+        {
+            _disabledInput = true;
+            StateHasChanged();
+            _messages.Add(new ChatMessage("user", _input));
+            var message = await ChatService.Chat(_input);
+            _messages.Add(new ChatMessage("assistant", message));
+            _input = string.Empty;
+        }
+        catch (Exception e)
+        {
+            _messages.Add(new ChatMessage("error", e.Message));
+        }
+        finally
+        {
+            _disabledInput = false;
+            StateHasChanged();
+        }
+    }
+
+}

@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Bocchi.ComicSubscription;
 using Bocchi.HtmlAgilityPack;
-using Bocchi.SoraBotPlugin.ComicSubscription;
 using HtmlAgilityPack;
 using RestSharp;
 using Volo.Abp.DependencyInjection;
@@ -12,10 +12,10 @@ namespace Bocchi.Blazor.Pages.Sora.ComicSubscription;
 
 public class SearchService : ITransientDependency
 {
-    private readonly RestClient _client = new(SoraBotPlugin.ComicSubscription.SearchService.Url);
-    private readonly SoraBotPlugin.ComicSubscription.SearchService _searchService;
+    private readonly RestClient _client = new(Bocchi.ComicSubscription.SearchService.Url);
+    private readonly Bocchi.ComicSubscription.SearchService _searchService;
 
-    public SearchService(SoraBotPlugin.ComicSubscription.SearchService searchService)
+    public SearchService(Bocchi.ComicSubscription.SearchService searchService)
     {
         _searchService = searchService;
     }

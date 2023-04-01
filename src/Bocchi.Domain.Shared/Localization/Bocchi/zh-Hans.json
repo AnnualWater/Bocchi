@@ -1,6 +1,7 @@
 {
     "culture": "zh-Hans",
     "texts": {
-      
+      "BocchiPermissions.OpenAiApi.Default": "权限组：OpenAI",
+      "Permission:BocchiPermissions.OpenAiApi.Chat": "权限：OpenAI-ChatGPT"
     }
   }

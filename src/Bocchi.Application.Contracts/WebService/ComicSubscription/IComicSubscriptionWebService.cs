@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Bocchi.ComicSubscription;
 using Volo.Abp.Application.Services;
 
-namespace Bocchi.SoraBotPlugin.ComicSubscription;
+namespace Bocchi.ComicSubscription;
 
 public interface IComicSubscriptionWebService : IApplicationService
 {

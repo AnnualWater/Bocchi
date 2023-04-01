@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Bocchi.SoraBotPlugin.OrderMusic;
+namespace Bocchi.OrderMusic;
 
 public class Artists
 {

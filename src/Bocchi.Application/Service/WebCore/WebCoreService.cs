@@ -32,6 +32,9 @@ public class WebCoreService : IWebCoreService, ITransientDependency
         {
             switch (_tool)
             {
+                case "RawUrl":
+                    _url = _configuration.GetValue("WebCore:RawUrl", string.Empty);
+                    return;
                 case "Cpolar":
                     var url = _configuration.GetValue("WebCore:Cpolar:Url", string.Empty);
                     if (string.IsNullOrEmpty(url))
@@ -67,15 +70,20 @@ public class WebCoreService : IWebCoreService, ITransientDependency
         }
         catch (Exception e)
         {
-            _logger.LogWarning(e,"加载自定义URL配置出错！");
+            _logger.LogWarning(e, "加载自定义URL配置出错！");
         }
-        
+
         _url = _configuration.GetValue("Urls", "未配置Urls");
     }
 
     public async Task<string> GetWebUrl()
     {
         await TestUrl();
+        if (_url.EndsWith("/"))
+        {
+            _url = _url[..^1];
+        }
+
         return _url;
     }
 

@@ -1,4 +1,4 @@
-﻿namespace Bocchi.SoraBotPlugin.OrderMusic;
+﻿namespace Bocchi.OrderMusic;
 
 public class MusicDataItem
 {

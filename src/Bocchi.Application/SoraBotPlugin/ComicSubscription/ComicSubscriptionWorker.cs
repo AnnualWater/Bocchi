@@ -2,33 +2,34 @@
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Bocchi.ComicSubscription;
 using Bocchi.PluginSwitch;
 using Bocchi.SoraBotCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sora.Entities;
 using Sora.Entities.Segment;
-using Volo.Abp.BackgroundWorkers.Hangfire;
+using Volo.Abp.BackgroundWorkers;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Threading;
 using Volo.Abp.Uow;
 
-namespace Bocchi.SoraBotPlugin.ComicSubscription;
+namespace Bocchi.ComicSubscription;
 
 /// <summary>
 /// 检查番剧更新后台任务
 /// </summary>
-public class ComicSubscriptionWorker : HangfireBackgroundWorkerBase
+public class ComicSubscriptionWorker : AsyncPeriodicBackgroundWorkerBase
 {
-    public ComicSubscriptionWorker()
+    public ComicSubscriptionWorker(AbpAsyncTimer timer, IServiceScopeFactory serviceScopeFactory) : base(timer,
+        serviceScopeFactory)
     {
-        RecurringJobId = nameof(ComicSubscriptionWorker);
-        CronExpression = "0 */10 * * * *";
+        Timer.Period = 600000;
     }
 
-    public override async Task DoWorkAsync(CancellationToken cancellationToken = new CancellationToken())
+    protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
     {
-        Logger.LogInformation("检查番剧更新");
+        var cancellationToken = workerContext.CancellationToken;
+        Logger.LogInformation("定时任务启动：检查番剧更新");
         // 检查番剧更新
         // 获取服务
         var soraService = ServiceProvider.GetRequiredService<ISoraBotService>();
@@ -113,8 +114,10 @@ public class ComicSubscriptionWorker : HangfireBackgroundWorkerBase
             }
 
             await uow.CompleteAsync(cancellationToken);
+            Logger.LogInformation("定时任务完成：检查番剧更新");
         }
     }
+
 
     private static MessageBody GetUpdateMessage(SearchComicInfo info)
         => new()

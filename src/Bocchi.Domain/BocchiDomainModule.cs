@@ -1,9 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Bocchi.MultiTenancy;
 using Volo.Abp.AuditLogging;
 using Volo.Abp.BackgroundJobs;
-using Volo.Abp.BackgroundJobs.Hangfire;
 using Volo.Abp.Emailing;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Identity;
@@ -15,6 +14,7 @@ using Volo.Abp.PermissionManagement.Identity;
 using Volo.Abp.PermissionManagement.OpenIddict;
 using Volo.Abp.SettingManagement;
 using Volo.Abp.TenantManagement;
+using Volo.Abp.BlobStoring.Database;
 
 namespace Bocchi;
 
@@ -29,11 +29,11 @@ namespace Bocchi;
     typeof(AbpPermissionManagementDomainIdentityModule),
     typeof(AbpSettingManagementDomainModule),
     typeof(AbpTenantManagementDomainModule),
-    typeof(AbpEmailingModule),
+    typeof(AbpEmailingModule)
     // Hangfire
-    typeof(AbpBackgroundJobsHangfireModule)
 )]
-public class BocchiDomainModule : AbpModule
+[DependsOn(typeof(BlobStoringDatabaseDomainModule))]
+    public class BocchiDomainModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {

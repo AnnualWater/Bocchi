@@ -13,7 +13,7 @@ using Sora.Enumeration.EventParamsType;
 using Sora.EventArgs.SoraEvent;
 using Sora.OnebotAdapter;
 
-namespace Bocchi.SoraBotPlugin.OrderMusic;
+namespace Bocchi.OrderMusic;
 
 public class OrderMusicPlugin : IOnGroupMessagePlugin, IOnPrivateMessagePlugin
 {

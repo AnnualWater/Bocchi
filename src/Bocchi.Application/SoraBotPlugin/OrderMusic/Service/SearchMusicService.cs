@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using RestSharp;
 using Volo.Abp.DependencyInjection;
 
-namespace Bocchi.SoraBotPlugin.OrderMusic;
+namespace Bocchi.OrderMusic;
 
 public class SearchMusicService : ITransientDependency
 {

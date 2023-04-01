@@ -5,7 +5,6 @@ using Volo.Abp;
 using Volo.Abp.Account;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.BackgroundWorkers;
-using Volo.Abp.BackgroundWorkers.Hangfire;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Identity;
 using Volo.Abp.Modularity;
@@ -23,8 +22,7 @@ namespace Bocchi;
     typeof(AbpPermissionManagementApplicationModule),
     typeof(AbpTenantManagementApplicationModule),
     typeof(AbpFeatureManagementApplicationModule),
-    typeof(AbpSettingManagementApplicationModule),
-    typeof(AbpBackgroundWorkersHangfireModule)
+    typeof(AbpSettingManagementApplicationModule)
 )]
 public class BocchiApplicationModule : AbpModule
 {
@@ -36,7 +34,7 @@ public class BocchiApplicationModule : AbpModule
             .Where(a => a.FullName != null && a.FullName.Contains(nameof(Bocchi))).SelectMany(a =>
                 a.GetTypes().Where(type =>
                     !type.IsAbstract && !type.IsInterface &&
-                    type.GetBaseClasses().Contains(typeof(HangfireBackgroundWorkerBase))));
+                    type.GetBaseClasses().Contains(typeof(AsyncPeriodicBackgroundWorkerBase))));
 
         foreach (var worker in workers)
         {

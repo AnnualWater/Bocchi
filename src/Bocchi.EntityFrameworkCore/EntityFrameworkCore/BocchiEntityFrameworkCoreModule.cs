@@ -1,6 +1,3 @@
-﻿using Hangfire;
-using Hangfire.PostgreSql;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
@@ -13,6 +10,7 @@ using Volo.Abp.OpenIddict.EntityFrameworkCore;
 using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using Volo.Abp.SettingManagement.EntityFrameworkCore;
 using Volo.Abp.TenantManagement.EntityFrameworkCore;
+using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
 
 namespace Bocchi.EntityFrameworkCore;
 
@@ -28,7 +26,8 @@ namespace Bocchi.EntityFrameworkCore;
     typeof(AbpTenantManagementEntityFrameworkCoreModule),
     typeof(AbpFeatureManagementEntityFrameworkCoreModule)
     )]
-public class BocchiEntityFrameworkCoreModule : AbpModule
+[DependsOn(typeof(BlobStoringDatabaseEntityFrameworkCoreModule))]
+    public class BocchiEntityFrameworkCoreModule : AbpModule
 {
     public override void PreConfigureServices(ServiceConfigurationContext context)
     {
@@ -37,7 +36,6 @@ public class BocchiEntityFrameworkCoreModule : AbpModule
 
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
-        var configuration = context.Services.GetConfiguration();
         context.Services.AddAbpDbContext<BocchiDbContext>(options =>
         {
                 /* Remove "includeAllEntities: true" to create
@@ -52,15 +50,7 @@ public class BocchiEntityFrameworkCoreModule : AbpModule
             options.UseNpgsql();
         });
         
-        ConfigureHangfire(context, configuration);
 
     }
-
-    private void ConfigureHangfire(ServiceConfigurationContext context, IConfiguration configuration)
-    {
-        context.Services.AddHangfire(config =>
-        {
-            config.UsePostgreSqlStorage(configuration.GetConnectionString("Default"));
-        });
-    }
+    
 }

@@ -15,7 +15,8 @@
   <ItemGroup>
     <PackageReference Include="Blazorise.Bootstrap5" Version="1.2.2" />
     <PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.2.2" />
-    <PackageReference Include="BootstrapBlazor" Version="7.4.3" />
+    <PackageReference Include="BootstrapBlazor" Version="7.4.4" />
+    <PackageReference Include="BootstrapBlazor.CherryMarkdown" Version="7.0.0" />
     <PackageReference Include="BootstrapBlazor.FontAwesome" Version="7.3.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.1.0" />
     <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
@@ -68,6 +69,7 @@
     <_ContentIncludedByDefault Remove="Pages\Account\Login.razor" />
     <_ContentIncludedByDefault Remove="Component\NavMenu\NavMenu.razor" />
     <_ContentIncludedByDefault Remove="Pages\Account\Logout.razor" />
+    <_ContentIncludedByDefault Remove="Pages\Test\MarkDownTest.razor" />
   </ItemGroup>
 
   <ItemGroup>

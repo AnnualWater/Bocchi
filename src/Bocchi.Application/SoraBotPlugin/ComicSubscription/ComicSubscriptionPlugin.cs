@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Bocchi.ComicSubscription;
 using Bocchi.ScreenShoot;
 using Bocchi.SoraBotCore;
 using Bocchi.SoraBotCore.NoPasswordToken;
@@ -13,7 +12,7 @@ using Sora.EventArgs.SoraEvent;
 using Sora.OnebotAdapter;
 using Volo.Abp.Domain.Repositories;
 
-namespace Bocchi.SoraBotPlugin.ComicSubscription;
+namespace Bocchi.ComicSubscription;
 
 public class ComicSubscriptionPlugin : IOnGroupMessagePlugin, IOnPrivateMessagePlugin
 {

@@ -5,9 +5,9 @@ using Bocchi.WebCore;
 using Sora.EventArgs.SoraEvent;
 using Sora.OnebotAdapter;
 
-namespace Bocchi.SoraBotPlugin.Login;
+namespace Bocchi.NoPasswordLogin;
 
-public class LoginPlugin : IOnPrivateMessagePlugin
+public class NoPasswordLoginPlugin : IOnPrivateMessagePlugin
 {
     public int Priority => 100;
 
@@ -17,7 +17,7 @@ public class LoginPlugin : IOnPrivateMessagePlugin
     private readonly INoPasswordTokenService _tokenService;
     private readonly IWebCoreService _webCoreService;
 
-    public LoginPlugin(INoPasswordTokenService tokenService, IWebCoreService webCoreService)
+    public NoPasswordLoginPlugin(INoPasswordTokenService tokenService, IWebCoreService webCoreService)
     {
         _tokenService = tokenService;
         _webCoreService = webCoreService;

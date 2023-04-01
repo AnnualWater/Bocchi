@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Guids;
 
-namespace Bocchi.SoraBotPlugin.OrderMusic;
+namespace Bocchi.OrderMusic;
 
 public class SearchCacheService : ISearchCacheService, ISingletonDependency
 {

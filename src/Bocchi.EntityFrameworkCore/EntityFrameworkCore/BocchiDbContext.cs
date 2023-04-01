@@ -1,4 +1,4 @@
-﻿using Bocchi.ComicSubscription;
+using Bocchi.ComicSubscription;
 using Bocchi.Core;
 using Bocchi.PluginSwitch;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +16,7 @@ using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using Volo.Abp.SettingManagement.EntityFrameworkCore;
 using Volo.Abp.TenantManagement;
 using Volo.Abp.TenantManagement.EntityFrameworkCore;
+using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
 
 namespace Bocchi.EntityFrameworkCore;
 
@@ -112,5 +113,6 @@ public class BocchiDbContext :
             //...
         });
         
-    }
+        builder.ConfigureBlobStoring();
+        }
 }

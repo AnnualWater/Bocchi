@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Bocchi.AutoAllowFriend;
+using Bocchi.NoPasswordLogin;
 using Bocchi.PluginSwitch;
-using Bocchi.SoraBotPlugin.Friend;
-using Bocchi.SoraBotPlugin.Login;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
 
@@ -14,8 +14,8 @@ public class PluginSwitchService : IPluginSwitchService, ITransientDependency
 
     private static readonly List<string> SystemPluginName = new()
     {
-        typeof(LoginPlugin).FullName,
-        typeof(FriendPlugin).FullName
+        typeof(NoPasswordLoginPlugin).FullName,
+        typeof(AutoAllowFriendPlugin).FullName
     };
 
     public PluginSwitchService(IRepository<PluginSwitchEntity> repository)
