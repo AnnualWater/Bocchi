@@ -22,6 +22,15 @@ public sealed class
     /// </summary>
     private readonly ISoraService _service;
 
+    ~SoraBotService()
+    {
+        if (_service != null)
+        {
+            // Linux 释放端口
+            _service.StopService().AsTask().Wait();
+        }
+    }
+
     /// <summary>
     /// ID表
     /// </summary>
@@ -341,6 +350,7 @@ public sealed class
                 _logger.LogWarning(e, "插件[{Plugin}]执行出错！", plugin.GetType().FullName);
                 _sessionPluginService.Finish(groupId, userId, pluginType);
             }
+
             _sessionPluginService.Finish(groupId, userId, pluginType);
         }
     }

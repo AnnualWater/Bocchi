@@ -14,6 +14,8 @@ public class ChatPluginSessionController : BocchiController
     {
         _blobContainer = blobContainer;
     }
+
+    [HttpGet]
     [Route("file")]
     public async Task<IActionResult> GetFile(string key)
     {

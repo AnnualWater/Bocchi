@@ -23,18 +23,16 @@ public class SearchService : ITransientDependency
         var doc = new HtmlDocument();
         doc.LoadHtml(response.Content);
 
-        var title = doc.DocumentNode
-            .SelectSingleNode("//div[@class='tabs']/div/div[@style='display:block']/ul/li[last()]/a")
-            .GetAttributeValue("title", string.Empty);
-        var url = doc.DocumentNode
-            .SelectSingleNode($"//div[@class='tabs']/div/div[@style='display:block']/ul/li/a[@title='{title}']/@href")
+        var route = doc.DocumentNode
+            .SelectSingleNode("//div[@class='tabs']/div/div[last()]/ul/li/a/@href")
             .GetAttributeValue("href", string.Empty);
+        
         return new SearchComicInfo
         {
             Title = doc.DocumentNode.SelectSingleNode("//div[@class='rate r']/h1/text()").TryGetText(),
             NowEpisode = doc.DocumentNode.SelectSingleNode("//div[@class='sinfo']/p[2]/text()").TryGetText(),
             UpdateInfo = doc.DocumentNode.SelectSingleNode("//div[@class='sinfo']/p[2]/font/text()").TryGetText(),
-            LastUrl = string.IsNullOrEmpty(url) ? $"{Url}/showp/{{comicId}}.html" : url
+            LastUrl = string.IsNullOrEmpty(route) ? $"{Url}/showp/{{comicId}}.html" : $"{Url}/{route}"
         };
     }
 }

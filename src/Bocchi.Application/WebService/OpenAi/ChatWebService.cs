@@ -31,7 +31,7 @@ public class ChatWebService : BocchiAppService, IChatWebService
         }
 
         // 检查代理
-        var options = new RestClientOptions();
+        var options = new RestClientOptions("https://api.openai.com/v1/");
         var proxyUrl = configuration.GetValue("OpenAi:Proxy", string.Empty);
         if (proxyUrl != string.Empty)
         {
@@ -39,7 +39,7 @@ public class ChatWebService : BocchiAppService, IChatWebService
         }
 
         // 创建client
-        _client = new RestClient("https://api.openai.com/v1/");
+        _client = new RestClient(options);
         _client.AddDefaultHeaders(new Dictionary<string, string>
         {
             { "Content-Type", "application/json" },
