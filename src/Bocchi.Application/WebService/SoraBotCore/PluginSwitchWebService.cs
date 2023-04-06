@@ -5,6 +5,8 @@ using Bocchi.PluginSwitch;
 using Microsoft.AspNetCore.Authorization;
 using Sora.Enumeration.EventParamsType;
 using Volo.Abp.Application.Services;
+using Volo.Abp.Authorization;
+using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
 
 namespace Bocchi.SoraBotCore;
@@ -28,7 +30,7 @@ public class PluginSwitchWebService : ApplicationService, IPluginSwitchWebServic
         var userTencentId = await _currentSoraUser.GetUserTencentId();
         if (userTencentId == null)
         {
-            return new List<PluginSwitchItemDto>();
+            throw new AbpAuthorizationException();
         }
 
         return (await _pluginSwitchItemRepository.GetListAsync(e =>
@@ -41,7 +43,7 @@ public class PluginSwitchWebService : ApplicationService, IPluginSwitchWebServic
         var soraUserInfo = await _currentSoraUser.GetUserInfo();
         if (soraUserInfo == null)
         {
-            return null;
+            throw new AbpAuthorizationException();
         }
 
         var item = await _pluginSwitchItemRepository.GetAsync(e => e.PluginSwitchType == PluginSwitchType.Private &&
@@ -49,7 +51,7 @@ public class PluginSwitchWebService : ApplicationService, IPluginSwitchWebServic
                                                                    e.PluginFullName == pluginFullName);
         if (item == null)
         {
-            return null;
+            throw new EntityNotFoundException(typeof(PluginSwitchEntity));
         }
         else
         {
@@ -64,7 +66,7 @@ public class PluginSwitchWebService : ApplicationService, IPluginSwitchWebServic
         var soraUserInfo = await _currentSoraUser.GetUserInfo();
         if (soraUserInfo == null)
         {
-            return null;
+            throw new AbpAuthorizationException();
         }
 
         var item = await _pluginSwitchItemRepository.GetAsync(e => e.PluginSwitchType == PluginSwitchType.Private &&
@@ -72,7 +74,7 @@ public class PluginSwitchWebService : ApplicationService, IPluginSwitchWebServic
                                                                    e.PluginFullName == pluginFullName);
         if (item == null)
         {
-            return null;
+            throw new EntityNotFoundException(typeof(PluginSwitchEntity));
         }
         else
         {
@@ -100,7 +102,7 @@ public class PluginSwitchWebService : ApplicationService, IPluginSwitchWebServic
         var memberInfo = await _currentSoraUser.GetGroupMemberInfo(groupId);
         if (memberInfo == null || memberInfo.Role < MemberRoleType.Admin)
         {
-            return null;
+            throw new AbpAuthorizationException();
         }
 
         var item = await _pluginSwitchItemRepository.GetAsync(e => e.PluginSwitchType == PluginSwitchType.Group &&
@@ -108,7 +110,7 @@ public class PluginSwitchWebService : ApplicationService, IPluginSwitchWebServic
                                                                    e.PluginFullName == pluginFullName);
         if (item == null)
         {
-            return null;
+            throw new EntityNotFoundException(typeof(PluginSwitchEntity));
         }
         else
         {
@@ -130,7 +132,7 @@ public class PluginSwitchWebService : ApplicationService, IPluginSwitchWebServic
         var memberInfo = await _currentSoraUser.GetGroupMemberInfo(groupId);
         if (memberInfo == null || memberInfo.Role < MemberRoleType.Admin)
         {
-            return null;
+            throw new AbpAuthorizationException();
         }
 
         var item = await _pluginSwitchItemRepository.GetAsync(e => e.PluginSwitchType == PluginSwitchType.Group &&
@@ -138,7 +140,7 @@ public class PluginSwitchWebService : ApplicationService, IPluginSwitchWebServic
                                                                    e.PluginFullName == pluginFullName);
         if (item == null)
         {
-            return null;
+            throw new EntityNotFoundException(typeof(PluginSwitchEntity));
         }
 
 

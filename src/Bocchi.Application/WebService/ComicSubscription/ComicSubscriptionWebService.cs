@@ -1,10 +1,13 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Bocchi.SoraBotCore;
 using Volo.Abp.Application.Services;
+using Volo.Abp.Authorization;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Validation;
 
 namespace Bocchi.ComicSubscription;
 
@@ -22,24 +25,42 @@ public class ComicSubscriptionWebService : ApplicationService, IComicSubscriptio
         _searchService = searchService;
     }
 
+    /// <summary>
+    /// 获取番剧订阅列表
+    /// </summary>
+    /// <param name="type">订阅类型</param>
+    /// <param name="groupId">群组ID</param>
+    /// <returns></returns>
     public async Task<List<ComicSubscriptionDto>> GetComicSubscriptionList(ScheduledType type, long groupId = 0)
     {
+        // 获取用户信息
         var userTencentId = await _currentSoraUser.GetUserTencentId();
         if (userTencentId == null)
         {
-            return new List<ComicSubscriptionDto>();
+            throw new AbpAuthorizationException();
         }
 
         switch (type)
         {
+            // 私聊订阅
             case ScheduledType.Private:
 
                 return (await _repository.GetListAsync(e =>
                         e.ScheduledType == ScheduledType.Private && e.CreateUserId == userTencentId))
                     .Select(e => ObjectMapper.Map<ComicSubscriptionEntity, ComicSubscriptionDto>(e))
                     .ToList();
-
+            // 群聊订阅
             case ScheduledType.Group:
+                // 数据验证
+                if (groupId < 100000L)
+                {
+                    throw new AbpValidationException(new List<ValidationResult>
+                    {
+                        new("请检查groupId")
+                    });
+                }
+
+                // 检查是否在群内
                 var userMemberInfo = await _currentSoraUser.GetGroupMemberInfo(groupId);
                 if (userMemberInfo == null)
                 {
@@ -50,7 +71,11 @@ public class ComicSubscriptionWebService : ApplicationService, IComicSubscriptio
                         e.ScheduledType == ScheduledType.Group && e.GroupId == groupId))
                     .Select(e => ObjectMapper.Map<ComicSubscriptionEntity, ComicSubscriptionDto>(e))
                     .ToList();
-            default: return new List<ComicSubscriptionDto>();
+            default:
+                throw new AbpValidationException(new List<ValidationResult>
+                {
+                    new("意外的ScheduledType")
+                });
         }
     }
 
@@ -59,7 +84,7 @@ public class ComicSubscriptionWebService : ApplicationService, IComicSubscriptio
         var userTencentId = await _currentSoraUser.GetUserTencentId();
         if (userTencentId == null)
         {
-            return;
+            throw new AbpAuthorizationException();
         }
 
         switch (type)
@@ -75,10 +100,19 @@ public class ComicSubscriptionWebService : ApplicationService, IComicSubscriptio
 
                 return;
             case ScheduledType.Group:
+                // 数据验证
+                if (groupId < 100000L)
+                {
+                    throw new AbpValidationException(new List<ValidationResult>
+                    {
+                        new("请检查groupId")
+                    });
+                }
+
                 var userMemberInfo = await _currentSoraUser.GetGroupMemberInfo(groupId);
                 if (userMemberInfo == null)
                 {
-                    return;
+                    throw new AbpAuthorizationException();
                 }
 
                 var gEntity = await _repository.GetAsync(e =>
@@ -89,7 +123,11 @@ public class ComicSubscriptionWebService : ApplicationService, IComicSubscriptio
                 }
 
                 return;
-            default: return;
+            default:
+                throw new AbpValidationException(new List<ValidationResult>
+                {
+                    new("意外的ScheduledType")
+                });
         }
     }
 
